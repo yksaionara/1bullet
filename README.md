@@ -2,69 +2,111 @@
 
 Made by Saif.
 
-1 Bullet is a Windows VALORANT companion that reads the local Riot Client API to show live match and lobby information: player ranks, RR, parties, encounters, agents, player cards, and equipped Vandal and Phantom skins when Riot exposes loadout data.
+1 Bullet is a native Windows VALORANT companion. It reads Riot's local client interfaces on your PC to show live lobby and match information such as ranks, RR, parties, encounters, agents, player cards, and equipped weapon skins when that data is available.
+
+## Download
+
+Use the latest release from the **Releases** page.
+
+**Recommended:** install with `1.Bullet.Setup.exe`.
+
+The installer includes both parts required by the desktop app:
+
+- `1bullet.exe` — native .NET 8 / WPF desktop UI
+- `1bullet-backend.exe` — local Python backend used for Riot/game data
+
+A portable package is also published as `1bullet-portable-v<version>.zip`. Extract the whole ZIP before running `1bullet.exe`; the backend executable must remain next to it.
+
+The raw desktop executable is intentionally not published by itself because it cannot function without the backend.
 
 ## Architecture
 
 ```
-Native WPF desktop UI (wpf/, C# + .NET 8, 1bullet.exe)
-        ↕  HTTP on 127.0.0.1 only
-Python backend (backend/, 1bullet-backend.exe child process)
-        ↕  Riot lockfile + local client APIs
+Native WPF desktop UI (C# / .NET 8)
+        ↕ HTTP on 127.0.0.1 only
+Local Python backend
+        ↕ Riot lockfile + local client APIs
 VALORANT / Riot Client
 ```
 
-- The Python backend is authoritative for all Riot/game data (live match, ranks, parties, encounters, inventory/loadouts, settings) and is preserved as-is.
-- The native WPF frontend contains no WebView, browser control, or embedded browser engine. It renders everything with WPF controls and talks only to the backend on loopback.
-- The installed `1bullet.exe` launches and supervises the backend child process itself: health-gated startup, output captured to a log file, bounded auto-restart, and clean shutdown. No Python, browser, or terminal windows are ever shown.
+The desktop UI does not use WebView2, Electron, Chromium, Tauri, or an embedded browser engine.
 
 ## Features
 
-- Live local-client scoreboard with rank, party, encounter, agent, and loadout data.
-- Empty, waiting state when VALORANT is closed or no live match is available. Production builds never generate demo players or skins.
-- Local settings for dashboard accent color, custom PNG/JPG/JPEG/WEBP background, and Windows startup.
-- Local-only Riot authentication. Lockfile credentials and authorization headers are never sent to project services.
-- Optional Discord Rich Presence and safe-by-default agent-select actions.
+- Native Windows desktop UI.
+- Live local-client scoreboard and match state.
+- Rank, RR, party, encounter, agent, and player-card information when available.
+- Equipped Vandal and Phantom skins when Riot exposes loadout data.
+- Competitive match history and profile details.
+- Custom accent colors and local background images.
+- Optional Start with Windows.
+- Update checks against this repository only.
+- Empty/waiting states instead of production demo players.
 
-## Install and Update
+## Privacy and network behavior
 
-Download the latest installer from the [1bullet releases page](https://github.com/yksaionara/1bullet/releases) — it is built as `1 Bullet Setup.exe` and listed there as `1.Bullet.Setup.exe` (GitHub shows dots instead of spaces). The installed application is `1bullet.exe`.
+- Riot lockfile passwords and local authorization headers stay local.
+- The backend binds to `127.0.0.1`.
+- Custom background images remain on your PC.
+- Release/update checks go to `yksaionara/1bullet` on GitHub.
+- Riot and asset endpoints may still be contacted when required for live data and artwork.
 
-Source ZIP releases are named `1bullet-v<version>.zip`. `start.bat` checks `yksaionara/1bullet` GitHub Releases before launch and applies a newer ZIP release transactionally. `UPDATE.bat` runs the same updater on demand.
+## Updates
 
-The installed `1bullet.exe` is the native desktop app with the live scoreboard, Vandal/Phantom skins, theme, background, and Start-with-Windows settings. When a newer release is published to this repository, the app shows an update prompt and downloads `1 Bullet Setup.exe` from these releases.
+Installed builds check:
 
-## Build From Source
+`https://api.github.com/repos/yksaionara/1bullet/releases/latest`
 
-Python backend / source mode:
+When a newer version exists, 1 Bullet offers the installer from this repository's release assets.
+
+Release artifacts include SHA-256 checksums in `SHA256SUMS.txt`.
+
+## Build from source
+
+Requirements:
+
+- Windows x64
+- .NET 8 SDK
+- CPython 3.12.10
+- Inno Setup for installer builds
+
+Backend/source environment:
 
 ```powershell
 ./install.bat
 ./start.bat
-./scripts/build-release.ps1 -Version (Get-Content VERSION).Trim() -Output ./dist
 ```
 
-The release scripts require Windows x64 and the pinned Python runtime described in `runtime.json`.
-
-Native desktop app (requires the .NET 8 SDK):
+Native desktop UI:
 
 ```powershell
+dotnet restore wpf/OneBullet.csproj
 dotnet build wpf/OneBullet.csproj -c Release
-dotnet publish wpf/OneBullet.csproj -c Release -r win-x64 --self-contained `
-  -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist
 ```
 
-The WPF project takes its version from the repo-root `VERSION` file, so all artifacts always agree. Developers can point a locally built UI at a running backend with `ONEBULLET_BACKEND_URL=http://127.0.0.1:5000`.
+Release validation:
+
+```powershell
+./scripts/verify-version.ps1
+python -m compileall -q backend run.py cli.py
+./.venv/Scripts/python.exe scripts/import_smoke.py
+```
+
+See `docs/RELEASE_CHECKLIST.md` before creating a public tag.
 
 ## Troubleshooting
 
-- Start the Riot Client and VALORANT, then wait until the game reaches the menus.
-- If the dashboard is empty during agent select, retry after the local client has finished loading.
-- If the app reports the backend did not start, open the log from the status bar (or `%LOCALAPPDATA%\1Bullet\backend-console.log`) — the actual backend error and a Retry button are shown in the app instead of a dead page.
-- Run `install.bat` again to repair the source-runtime environment. Logs are stored in `%LOCALAPPDATA%\1Bullet`.
+If VALORANT data does not appear:
 
-## License and Attribution
+1. Start Riot Client and VALORANT.
+2. Wait until the client finishes loading.
+3. Enter the lobby, Agent Select, or a match.
+4. If the backend fails, use the app's diagnostics/log controls or inspect `%LOCALAPPDATA%\1Bullet\backend-console.log`.
 
-1 Bullet is a modified version of [Valorant Scout](https://github.com/kryotrades/Valorant-Scout) by kryotrades. It is distributed under the GNU General Public License v3.0; see `LICENSE` and `NOTICE`.
+If a portable build says the backend is missing, make sure both `1bullet.exe` and `1bullet-backend.exe` were extracted into the same folder.
 
-1 Bullet is not affiliated with, endorsed by, or sponsored by Riot Games. Client automation may violate Riot's Terms of Service and is used at your own risk.
+## License and attribution
+
+1 Bullet is a modified version of [Valorant Scout](https://github.com/kryotrades/Valorant-Scout) by kryotrades and is distributed under the GNU General Public License v3.0. See `LICENSE` and `NOTICE`.
+
+1 Bullet is not affiliated with, endorsed by, or sponsored by Riot Games. Features that automate client actions may be subject to Riot's terms and policies.
