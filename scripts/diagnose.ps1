@@ -187,15 +187,15 @@ DiagLine "Discord desktop: $(if ($discord) { 'running (Rich Presence possible)' 
 
 
 RSection "Network"
-$frontend = "https://yksaionara.github.io/1bullet"
+$backendPort = "5000"
 if (Test-Path $EnvFile) {
-    $fu = Get-Content $EnvFile -Encoding UTF8 | Select-String '^\s*FRONTEND_URL\s*=\s*(\S+)'
-    if ($fu) { $frontend = $fu.Matches[0].Groups[1].Value }
+    $bp = Get-Content $EnvFile -Encoding UTF8 | Select-String '^\s*BACKEND_PORT\s*=\s*(\S+)'
+    if ($bp) { $backendPort = $bp.Matches[0].Groups[1].Value }
 }
 try {
-    $r = Invoke-WebRequest -Uri $frontend -UseBasicParsing -TimeoutSec 8 -Method Head
-    Good "hosted dashboard reachable ($frontend)"
-} catch { Bad "hosted dashboard NOT reachable ($frontend): $($_.Exception.Message)" }
+    $h = Invoke-RestMethod -Uri "http://127.0.0.1:$backendPort/api/health" -TimeoutSec 5
+    Good "local backend dashboard reachable (http://127.0.0.1:$backendPort/dashboard, v$($h.appVersion))"
+} catch { DiagLine "local backend: not running (start the app, then open http://127.0.0.1:$backendPort/dashboard)" }
 try {
     $null = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" `
         -Headers @{ "User-Agent" = "1bullet" } -TimeoutSec 8

@@ -51,7 +51,7 @@ try {
             Note "Developer tree detected - skipping frontend (run install.bat with -Frontend to build it)."
         }
     } else {
-        Note "Slim install - no local frontend bundled; the app uses the hosted dashboard."
+        Note "Slim install - no local frontend bundled; the app uses the bundled local dashboard."
     }
 
     $saved = Get-SavedRegion

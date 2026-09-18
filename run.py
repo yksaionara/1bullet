@@ -21,7 +21,6 @@ FRONTEND = ROOT / "frontend"
 SCOUT_DIR = ROOT / ".scout"
 IS_WIN = os.name == "nt"
 
-HOSTED_FRONTEND = "https://yksaionara.github.io/1bullet"
 RELEASE_API = "https://api.github.com/repos/yksaionara/1bullet/releases/latest"
 
 sys.path.insert(0, str(BACKEND))
@@ -683,14 +682,9 @@ def main():
                                             reserved={backend_port, ws_port}))
             frontend_url = (os.environ.get("LOCAL_FRONTEND_URL", "").strip()
                             or f"http://localhost:{frontend_port}").rstrip("/")
-        elif FROZEN:
+        else:
             frontend_url = f"http://127.0.0.1:{backend_port}"
             say("Using the bundled local 1 Bullet dashboard.", C_OK)
-            say(f"Dashboard host: {frontend_url}")
-        else:
-            frontend_url = (os.environ.get("FRONTEND_URL", "").strip()
-                            or HOSTED_FRONTEND).rstrip("/")
-            say("No local frontend bundled — using the hosted dashboard.", C_OK)
             say(f"Dashboard host: {frontend_url}")
 
         child_env = os.environ.copy()
@@ -702,7 +696,7 @@ def main():
 
         LOG.info("starting stack: backend=%s ws=%s frontend=%s (%s)",
                  backend_port, ws_port, frontend_port,
-                 "local frontend" if local_frontend else "hosted")
+                 "local frontend" if local_frontend else "bundled")
 
         backend_log_fh = backend_output(prod)
         write_runtime_state(backend_port, ws_port, frontend_port)
@@ -758,8 +752,6 @@ def main():
                     "The local frontend did not start. Run diagnostics.bat for details.")
 
         say(f"Dashboard will open at {frontend_url}/dashboard", C_OK)
-        if not local_frontend:
-            say("Your browser may ask to allow local-network access — click Allow.", C_WARN)
 
         if not ATTACHED:
             print(f"\n{C_OK}Web app + terminal scoreboard running. Press Ctrl+C to stop.{C_END}\n")
