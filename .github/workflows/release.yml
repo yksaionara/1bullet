@@ -43,10 +43,19 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          $ErrorActionPreference = "Stop"
           $version = (Get-Content VERSION -Raw).Trim()
           $tag = "v$version"
+          function Invoke-Gh {
+            & gh @args
+            if ($LASTEXITCODE -ne 0) { throw "gh $($args -join ' ') failed with exit $LASTEXITCODE" }
+          }
           $existing = gh release view $tag --json name 2>$null
-          if (-not $existing) { gh release create $tag --generate-notes --title $tag }
-          gh release upload $tag --clobber "dist/1bullet.exe" "dist/1 Bullet Setup.exe" "dist/1bullet-v$version.zip"
-          $bad = gh release view $tag --json assets -q '.assets[] | select(.name == "1.Bullet.Setup.exe") | .name'
-          if ($bad) { gh release delete-asset $tag $bad --yes }
+          if ($LASTEXITCODE -ne 0 -or -not $existing) { Invoke-Gh release create $tag --generate-notes --title $tag }
+          Invoke-Gh release upload $tag --clobber "dist/1bullet.exe" "dist/1 Bullet Setup.exe" "dist/1bullet-v$version.zip"
+          $bad = gh release view $tag --json assets -q '.assets[] | select(.name == "1.Bullet.Setup.exe") | .name' 2>$null
+          if ($bad) { Invoke-Gh release delete-asset $tag $bad --yes }
+          $names = (gh release view $tag --json assets -q '.assets[].name') -split "`r?`n" | Where-Object { $_ }
+          foreach ($need in @("1bullet.exe", "1 Bullet Setup.exe", "1bullet-v$version.zip")) {
+            if ($names -notcontains $need) { throw "release is missing asset '$need' (have: $($names -join ', '))" }
+          }
