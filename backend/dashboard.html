@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1 Bullet — Made by Saif</title>
+<style>
+:root { --accent: #FF4655; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Segoe UI, Arial, sans-serif; color: #ECE8E1; background: #0f1923; min-height: 100vh; }
+#bg { position: fixed; inset: 0; background-size: cover; background-position: center; z-index: 0; display: none; }
+#overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.68); z-index: 1; display: none; }
+#app { position: relative; z-index: 2; max-width: 1100px; margin: 0 auto; padding: 20px; }
+header { display: flex; align-items: baseline; gap: 12px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
+header h1 { margin: 0; color: var(--accent); letter-spacing: 1px; }
+header small { color: #9aa4ab; }
+#state { margin: 14px 0; color: #9aa4ab; }
+#players { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.card { background: rgba(15,25,35,0.88); border: 1px solid #2a3742; border-left: 4px solid var(--accent); border-radius: 8px; padding: 10px 12px; }
+.card .top { display: flex; gap: 10px; align-items: center; }
+.card img.face { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; background: #1c2a36; }
+.card .name { font-weight: 700; }
+.card .sub { color: #9aa4ab; font-size: 12px; }
+.skins { display: flex; gap: 10px; margin-top: 8px; }
+.skin { flex: 1; background: #132029; border: 1px solid #2a3742; border-radius: 6px; padding: 6px; min-height: 64px; }
+.skin h4 { margin: 0 0 4px; font-size: 12px; color: var(--accent); }
+.skin img { width: 100%; max-height: 48px; object-fit: contain; display: block; }
+.skin div.n { font-size: 12px; }
+#settings { margin-top: 22px; background: rgba(15,25,35,0.88); border: 1px solid #2a3742; border-radius: 8px; padding: 12px; }
+#settings h2 { margin: 0 0 8px; font-size: 16px; color: var(--accent); }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 8px 0; }
+button { background: var(--accent); color: #fff; border: 0; border-radius: 6px; padding: 8px 12px; cursor: pointer; }
+button.ghost { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+input[type=color] { width: 48px; height: 32px; border: 0; background: none; padding: 0; }
+.wait { background: rgba(15,25,35,0.88); border: 1px dashed #2a3742; border-radius: 8px; padding: 24px; text-align: center; color: #9aa4ab; }
+</style>
+</head>
+<body>
+<div id="bg"></div><div id="overlay"></div>
+<div id="app">
+<header><h1>1 BULLET</h1><small>Made by Saif</small><small id="ver"></small></header>
+<div id="state">Waiting for VALORANT…</div>
+<div id="players"></div>
+<div id="settings">
+<h2>Settings</h2>
+<div class="row">
+<label>Accent <input type="color" id="accent"></label>
+<button id="accentSave">Save theme</button>
+<button id="accentReset" class="ghost">Reset theme</button>
+</div>
+<div class="row">
+<label>Background <input type="file" id="bgFile" accept=".png,.jpg,.jpeg,.webp"></label>
+<button id="bgRemove" class="ghost">Remove background</button>
+</div>
+<div class="row">
+<label><input type="checkbox" id="startup"> Start 1 Bullet with Windows</label>
+</div>
+<div class="row"><small>Backgrounds stay on this PC and are never uploaded. Skin images are cached by your browser.</small></div>
+</div>
+</div>
+<script>
+const playersEl = document.getElementById('players');
+const stateEl = document.getElementById('state');
+const bgEl = document.getElementById('bg');
+const overlayEl = document.getElementById('overlay');
+const accentEl = document.getElementById('accent');
+const startupEl = document.getElementById('startup');
+const DEFAULT_ACCENT = '#FF4655';
+let bgLoaded = '';
+
+function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function skinFor(p, weapon){
+  const w = (p.weapons || []).find(x => x.weapon === weapon);
+  return w ? w.skin : null;
+}
+function skinBox(title, skin){
+  const name = skin && skin.name ? esc(skin.name) : '—';
+  const img = skin && skin.icon ? `<img loading="lazy" src="${esc(skin.icon)}" alt="${esc(title)} skin">` : '<div class="n">No data</div>';
+  return `<div class="skin"><h4>${esc(title)}</h4>${img}<div class="n">${name}</div></div>`;
+}
+async function loadSettings(){
+  try{
+    const r = await fetch('/api/settings', {cache:'no-store'});
+    const s = await r.json();
+    const accent = s.accentColor || DEFAULT_ACCENT;
+    document.documentElement.style.setProperty('--accent', accent);
+    accentEl.value = /^#[0-9a-fA-F]{6}$/.test(accent) ? accent : DEFAULT_ACCENT;
+    startupEl.checked = !!s.startWithWindows;
+    if(s.background && bgLoaded !== s.background){
+      bgLoaded = s.background;
+      bgEl.style.backgroundImage = 'url(/api/settings/background)';
+      bgEl.style.display = 'block'; overlayEl.style.display = 'block';
+    } else if(!s.background){
+      bgLoaded=''; bgEl.style.display='none'; overlayEl.style.display='none';
+    }
+  }catch(e){}
+}
+async function loadBoard(){
+  try{
+    const r = await fetch('/api/live', {cache:'no-store'});
+    const b = await r.json();
+    document.getElementById('ver').textContent = b.appVersion ? ('v' + b.appVersion) : '';
+    const label = b.stateLabel || b.state || 'Offline';
+    stateEl.textContent = `${label}${b.map ? ' — ' + b.map : ''}${b.mode ? ' · ' + b.mode : ''}`;
+    const players = b.players || [];
+    if(!players.length){
+      const msg = (b.notice && b.notice.message) || 'Open VALORANT — lobby, Agent Select or a match.';
+      playersEl.innerHTML = `<div class="wait">${esc(msg)}<br>No fake players are shown.</div>`;
+      return;
+    }
+    playersEl.innerHTML = players.map(p => `
+      <div class="card">
+        <div class="top">
+          ${p.agentPortrait ? `<img class="face" loading="lazy" src="${esc(p.agentPortrait)}" alt="">` : ''}
+          <div><div class="name">${esc(p.name)}${p.nameHidden ? ' (hidden)' : ''}</div>
+          <div class="sub">${esc(p.agent || '—')} · ${esc(p.rank || 'Unranked')} · ${p.rr ?? 0} RR · K/D ${p.kd ?? '—'} · Lv ${p.level ?? '—'}</div></div>
+        </div>
+        <div class="skins">${skinBox('Vandal', skinFor(p,'Vandal'))}${skinBox('Phantom', skinFor(p,'Phantom'))}</div>
+      </div>`).join('');
+  }catch(e){ stateEl.textContent = 'Backend unreachable — start 1 Bullet first.'; }
+}
+accentEl.addEventListener('change', () => document.documentElement.style.setProperty('--accent', accentEl.value));
+document.getElementById('accentSave').onclick = async () => {
+  await fetch('/api/settings', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({accentColor: accentEl.value})});
+  loadSettings();
+};
+document.getElementById('accentReset').onclick = async () => {
+  await fetch('/api/settings', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({accentColor: DEFAULT_ACCENT})});
+  loadSettings();
+};
+document.getElementById('bgFile').onchange = async (e) => {
+  const f = e.target.files[0]; if(!f) return;
+  const fd = new FormData(); fd.append('image', f);
+  const r = await fetch('/api/settings/background', {method:'POST', body: fd});
+  if(!r.ok){ alert('Background upload failed. Use PNG, JPG, JPEG or WEBP.'); }
+  e.target.value=''; loadSettings();
+};
+document.getElementById('bgRemove').onclick = async () => { await fetch('/api/settings/background', {method:'DELETE'}); loadSettings(); };
+startupEl.onchange = async () => {
+  const r = await fetch('/api/settings', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({startWithWindows: startupEl.checked})});
+  if(!r.ok || !(await r.json()).ok){ alert('Could not update Windows startup.'); }
+  loadSettings();
+};
+loadSettings(); loadBoard(); setInterval(loadBoard, 5000); setInterval(loadSettings, 30000);
+</script>
+</body>
+</html>

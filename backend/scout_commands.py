@@ -13,8 +13,6 @@ ALLOWED_COMMANDS = {
     "set_queue",
     "start_queue",
     "stop_queue",
-    "enable_remote",
-    "disable_remote",
     "launch_offline",
     "offline_status",
     "offline_toggle",
@@ -26,7 +24,7 @@ ALLOWED_COMMANDS = {
 }
 
 ACK_FIELDS = (
-    "remoteUrl", "remoteSessionId", "side", "map", "status", "agent",
+    "side", "map", "status", "agent",
     "configured", "perMap", "rateLimited", "dedup",
     "queue", "queueId", "inQueue",
     "running", "active", "enabled", "connected", "friendsLoaded",
@@ -109,10 +107,6 @@ class CommandRouter:
                 return self._queue_action("start_queue", payload)
             if command == "stop_queue":
                 return self._queue_action("stop_queue", payload)
-            if command == "enable_remote":
-                return self._enable_remote(payload)
-            if command == "disable_remote":
-                return self._disable_remote(payload)
             if command == "launch_offline":
                 return self._launch_offline(payload)
             if command == "offline_status":
@@ -247,19 +241,6 @@ class CommandRouter:
     def _update_match_meta(self, payload: dict) -> dict:
         import match_meta
         return match_meta.update(self._owner(), str(payload.get("matchId") or "").strip(), payload)
-
-    def _enable_remote(self, _payload: dict) -> dict:
-        if self.remote_controller is None:
-            return {"ok": False, "configured": False,
-                    "message": "Remote mode is not configured. Set ABLY_API_KEY "
-                               "in the frontend/Vercel environment."}
-        return self.remote_controller.enable()
-
-    def _disable_remote(self, _payload: dict) -> dict:
-        if self.remote_controller is None:
-            return {"ok": True, "message": "Remote mode was not active."}
-        return self.remote_controller.disable()
-
 
 if __name__ == "__main__":
     import offline_launch

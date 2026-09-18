@@ -73,7 +73,7 @@ if ($payload.Count -lt 30) { Fail-Build "suspiciously small payload ($($payload.
 Ok "$($payload.Count) files selected."
 
 
-$rootFolder = "valorant-scout-v$Version"
+    $rootFolder = "1bullet-v$Version"
 $work = Join-Path $env:TEMP ("vs-build-" + [Guid]::NewGuid().ToString("N"))
 $stage = Join-Path $work $rootFolder
 New-Item -ItemType Directory -Path $stage -Force | Out-Null
@@ -151,7 +151,7 @@ try {
 
 
     New-Item -ItemType Directory -Force -Path $Output | Out-Null
-    $zipName = "valorant-scout-v$Version.zip"
+    $zipName = "1bullet-v$Version.zip"
     $zipPath = Join-Path $Output $zipName
     if (Test-Path $zipPath) { Remove-Item -Force $zipPath }
     Step "Zipping $zipName ..."

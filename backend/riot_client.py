@@ -10,7 +10,6 @@ from datetime import datetime, timezone
 import requests
 import urllib3
 
-import sample_data
 from agents import UUID_TO_NAME, resolve_agent
 from vconstants import GAMEMODES, map_name_from_path, rank_from_tier
 
@@ -428,18 +427,17 @@ class RiotClient:
     def __init__(self):
         self.api_key = os.getenv("RIOT_API_KEY", "").strip()
         self.region = os.getenv("RIOT_REGION", "na").strip().lower()
-        self.source_pref = os.getenv("DATA_SOURCE", "auto").strip().lower()
+        self.source_pref = os.getenv("DATA_SOURCE", "local").strip().lower()
         self.allow_live_instalock = os.getenv("ALLOW_LIVE_INSTALOCK", "true").lower() == "true"
         self._valclient = None
 
     def get_player_overview(self, puuid: str) -> dict:
         pass
         order = {
-            "auto": ["local", "official", "demo"],
+            "auto": ["local", "official"],
             "local": ["local"],
             "official": ["official"],
-            "demo": ["demo"],
-        }.get(self.source_pref, ["local", "official", "demo"])
+        }.get(self.source_pref, ["local", "official"])
 
         last_err = None
         for src in order:
@@ -452,26 +450,11 @@ class RiotClient:
                     data = self._official_overview(puuid)
                     if data and data.get("matches"):
                         return data
-                elif src == "demo":
-                    return self._demo_overview(puuid)
             except Exception as e:
                 last_err = e
                 _log(f"source '{src}' failed: {e}")
 
-        _log(f"falling back to demo (last error: {last_err})")
-        return self._demo_overview(puuid)
-
-    def _demo_overview(self, puuid: str) -> dict:
-        data = sample_data.generate_player(puuid)
-
-        real_id = self._official_riot_id(puuid) if self.api_key else None
-        if real_id:
-            data["riotId"] = real_id
-            data["source"] = "demo"
-            data["sourceDetail"] = "Generated matches • Riot ID verified via account-v1"
-        else:
-            data["sourceDetail"] = "Generated sample career (no live source reachable)"
-        return data
+        raise ClientNotReady(f"No live data source is available ({last_err or 'open VALORANT'}).")
 
     def _official_headers(self) -> dict:
         return {"X-Riot-Token": self.api_key}
@@ -723,13 +706,12 @@ class RiotClient:
 
     def _party_live(self) -> bool:
         pass
-        return self.source_pref != "demo" and LocalAuth.available()
+        return self.source_pref != "official" and LocalAuth.available()
 
     def party_state(self, region: str | None = None) -> dict:
         pass
         if not self._party_live():
-            import sample_match
-            return sample_match.demo_queue_state()
+            return {"available": False, "message": "Open VALORANT to view party status."}
         try:
             auth = LocalAuth(region)
             auth.headers()
@@ -745,10 +727,7 @@ class RiotClient:
             return {"ok": False, "message": f"Unknown gamemode '{queue_id}'."}
         label = GAMEMODES.get(qid, qid.replace("_", " ").title())
         if not self._party_live():
-            import sample_match
-            if qid not in GAMEMODES:
-                return {"ok": False, "message": f"Unknown gamemode '{queue_id}'."}
-            return sample_match.demo_queue_set(qid)
+            return {"ok": False, "message": "Open VALORANT before changing the queue."}
         if dry_run:
             return {"ok": True, "status": "dry-run",
                     "message": f"DRY-RUN: would switch to {label}. "
@@ -777,8 +756,7 @@ class RiotClient:
     def start_queue(self, dry_run: bool = True, region: str | None = None) -> dict:
         pass
         if not self._party_live():
-            import sample_match
-            return sample_match.demo_queue_start()
+            return {"ok": False, "message": "Open VALORANT before starting the queue."}
         if dry_run:
             return {"ok": True, "status": "dry-run",
                     "message": "DRY-RUN: would start the queue. "
@@ -809,8 +787,7 @@ class RiotClient:
     def stop_queue(self, dry_run: bool = True, region: str | None = None) -> dict:
         pass
         if not self._party_live():
-            import sample_match
-            return sample_match.demo_queue_stop()
+            return {"ok": False, "message": "Open VALORANT before cancelling the queue."}
         if dry_run:
             return {"ok": True, "status": "dry-run",
                     "message": "DRY-RUN: would cancel the queue. "

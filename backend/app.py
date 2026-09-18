@@ -5,7 +5,7 @@ import os
 import threading
 import time
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 
 try:
@@ -21,7 +21,6 @@ import sync
 import pick_advisor
 import live_match
 import party_detector
-import sample_match
 import session_tracker
 import history
 import inventory
@@ -46,11 +45,12 @@ _CACHE_TTL = float(os.getenv("PLAYER_CACHE_TTL", "60"))
 _ENCOUNTER_BACKFILL_AT: dict[str, float] = {}
 _ENCOUNTER_BACKFILL_LOCK = threading.Lock()
 
-_SETTINGS_PATH = os.path.join(os.path.dirname(__file__), "data", "settings.json")
+_SETTINGS_PATH = str(scoutlog.SCOUT_DIR / "settings.json")
+_BACKGROUNDS_DIR = scoutlog.SCOUT_DIR / "backgrounds"
 _SETTINGS_LOCK = threading.Lock()
 
 _SETTINGS_KEYS = {"region", "agent", "mode", "delay", "dryRun", "perMap",
-                  "autoRefresh"}
+                  "autoRefresh", "background", "accentColor", "startWithWindows"}
 
 def _load_settings() -> dict:
     try:
@@ -135,7 +135,7 @@ def build_player_payload(puuid: str) -> dict:
         "rr": raw.get("rr", 0),
         "peakRank": peak["name"],
         "peakColor": peak["color"],
-        "source": raw.get("source", "demo"),
+        "source": raw.get("source", "local"),
         "sourceDetail": raw.get("sourceDetail", ""),
         "averages": _summarize(matches),
         "pickSuggestion": suggestion,
@@ -149,7 +149,7 @@ def health():
     import ws_server as _ws
     return jsonify({
         "ok": True,
-        "service": "valorant-scout",
+        "service": "1bullet",
         "appVersion": APP_VERSION,
         "protocol": _ws.PROTOCOL_VERSION,
         "wsReady": _ws.is_ready(),
@@ -167,13 +167,17 @@ def agents():
 
 @app.get("/api/settings")
 def settings_get():
-    pass
     with _SETTINGS_LOCK:
-        return jsonify(_load_settings())
+        settings = _load_settings()
+    try:
+        import startup
+        settings["startWithWindows"] = startup.enabled()
+    except Exception:
+        settings["startWithWindows"] = False
+    return jsonify(settings)
 
 @app.post("/api/settings")
 def settings_post():
-    pass
     body = request.get_json(silent=True) or {}
     incoming = {k: v for k, v in body.items() if k in _SETTINGS_KEYS}
     with _SETTINGS_LOCK:
@@ -185,10 +189,67 @@ def settings_post():
             app.logger.exception("settings save failed")
             return jsonify({"ok": False, "message": str(e),
                             "settings": merged}), 200
+    if "startWithWindows" in incoming:
+        try:
+            import startup
+            if not startup.set_enabled(bool(incoming["startWithWindows"])):
+                return jsonify({"ok": False, "message": "Windows startup setting could not be updated.",
+                                "settings": merged}), 200
+        except Exception as e:
+            return jsonify({"ok": False, "message": str(e), "settings": merged}), 200
     return jsonify({"ok": True, "settings": merged})
 
+
+@app.post("/api/settings/background")
+def background_upload():
+    image = request.files.get("image")
+    if image is None or not image.filename:
+        return jsonify({"ok": False, "message": "Choose an image file."}), 400
+    extension = os.path.splitext(image.filename)[1].lower()
+    if extension not in {".png", ".jpg", ".jpeg", ".webp"}:
+        return jsonify({"ok": False, "message": "Supported formats: PNG, JPG, JPEG, WEBP."}), 400
+    _BACKGROUNDS_DIR.mkdir(parents=True, exist_ok=True)
+    path = _BACKGROUNDS_DIR / f"dashboard-background{extension}"
+    for old in _BACKGROUNDS_DIR.glob("dashboard-background.*"):
+        try:
+            old.unlink(missing_ok=True)
+        except OSError:
+            app.logger.warning("could not remove old background %s (in use)", old)
+    image.save(path)
+    with _SETTINGS_LOCK:
+        settings = _load_settings()
+        settings["background"] = path.name
+        _save_settings(settings)
+    return jsonify({"ok": True, "background": "/api/settings/background"})
+
+
+@app.get("/api/settings/background")
+def background_get():
+    with _SETTINGS_LOCK:
+        name = _load_settings().get("background")
+    if not name or os.path.basename(name) != name:
+        return jsonify({"error": "No custom background selected."}), 404
+    path = _BACKGROUNDS_DIR / name
+    if not path.is_file():
+        return jsonify({"error": "Custom background is unavailable."}), 404
+    return send_file(path, conditional=True, max_age=3600)
+
+
+@app.delete("/api/settings/background")
+def background_reset():
+    with _SETTINGS_LOCK:
+        settings = _load_settings()
+        name = settings.pop("background", None)
+        _save_settings(settings)
+    if name and os.path.basename(name) == name:
+        try:
+            (_BACKGROUNDS_DIR / name).unlink(missing_ok=True)
+        except OSError:
+            app.logger.warning("could not remove background %s (in use)", name)
+    return jsonify({"ok": True})
+
 def _live_enabled() -> bool:
-    return client.source_pref != "demo" and LocalAuth.available()
+    return client.source_pref != "official" and LocalAuth.available()
 
 def _attach_encounters(board: dict) -> dict:
     pass
@@ -223,7 +284,6 @@ _BUILD_LOCK = threading.Lock()
 _BUILD_FRESH = 3.5
 
 def build_live(seed: int = 7, want_state: str | None = None) -> dict:
-    pass
     notice = None
     if _live_enabled():
         with _BUILD_LOCK:
@@ -268,18 +328,12 @@ def build_live(seed: int = 7, want_state: str | None = None) -> dict:
                     return {"state": "OFFLINE", "stateLabel": "Offline", "source": "local",
                             "error": str(e), "players": [], "teams": {}, "parties": [],
                             "notice": notice, "appVersion": APP_VERSION}
-    elif client.source_pref != "demo" and not LocalAuth.available():
-
+    elif not LocalAuth.available():
         notice = _client_notice()
-
-    board = (sample_match.generate_lobby(seed)
-             if (want_state or "").lower() == "menus"
-             else sample_match.generate(seed))
-    board = _attach_encounters(board)
-    if notice:
-        board["notice"] = notice
-    board["appVersion"] = APP_VERSION
-    return board
+    state = "MENUS" if LocalAuth.available() else "OFFLINE"
+    return {"state": state, "stateLabel": STATES[state], "source": "local",
+            "players": [], "teams": {}, "parties": [], "notice": notice,
+            "appVersion": APP_VERSION}
 
 @app.get("/api/state")
 def state():
@@ -292,7 +346,7 @@ def state():
         except Exception as e:
             return jsonify({"state": "OFFLINE", "stateLabel": "Offline",
                             "source": "local", "error": str(e)})
-    return jsonify({"state": "INGAME", "stateLabel": "In Game", "source": "demo"})
+    return jsonify({"state": "OFFLINE", "stateLabel": "Offline", "source": "local"})
 
 @app.get("/api/live")
 def live():
@@ -346,9 +400,6 @@ def _refresh_encounter_history(owner: str | None) -> None:
 @app.get("/api/encounters")
 def encounters():
     pass
-    if client.source_pref == "demo":
-        return jsonify({"players": sample_match.encounters(), "accountCount": 1,
-                        "scope": request.args.get("scope", "current")})
     owner = _current_puuid()
     _refresh_encounter_history(owner)
     scope = "all" if request.args.get("scope") == "all" else "current"
@@ -364,7 +415,7 @@ def recap():
         seed = int(request.args.get("seed", 7))
     except (TypeError, ValueError):
         seed = 7
-    return jsonify(live_recap or sample_match.recap(seed))
+    return jsonify(live_recap or {"available": False, "matches": []})
 
 
 def _current_puuid() -> str | None:
@@ -404,19 +455,6 @@ def session_delete(session_id: str):
 def session_reset():
     body = request.get_json(silent=True) or {}
     return jsonify(session_tracker.reset(_current_puuid(), body.get("goal")))
-
-
-@app.post("/api/remote-mode")
-def remote_mode():
-    if _COMMAND_ROUTER is None:
-        return jsonify({"ok": False, "configured": False,
-                        "message": "The local command bridge is still starting."}), 503
-    body = request.get_json(silent=True) or {}
-    action = "disable_remote" if body.get("action") == "disable" else "enable_remote"
-    result = _COMMAND_ROUTER.execute(
-        client_id=f"http:{request.remote_addr or 'local'}", command=action,
-        payload={}, command_id=body.get("id"))
-    return jsonify(result)
 
 
 def _insights_payload(timezone_name: str | None = None) -> dict:
@@ -469,7 +507,7 @@ def _inventory_payload() -> dict:
     if not _live_enabled():
         return {
             "available": False,
-            "retryable": client.source_pref != "demo",
+            "retryable": client.source_pref != "official",
             "error": "Live client not available.",
         }
     auth = LocalAuth()
@@ -519,7 +557,7 @@ def match(match_id: str):
                 return jsonify(data)
         except Exception:
             app.logger.exception("match detail failed")
-    return jsonify(sample_match.match_detail(match_id, subject))
+    return jsonify({"error": "Live match details are unavailable."}), 503
 
 @app.get("/api/debug/reveal")
 def debug_reveal():
@@ -554,7 +592,7 @@ def profile(puuid: str):
             app.logger.exception("live profile failed")
             data = None
     if data is None:
-        data = sample_match.career(puuid)
+        return jsonify({"error": "Live player history is unavailable."}), 503
 
     _CACHE[f"profile:{puuid}"] = (now, data)
     return jsonify(data)
@@ -696,10 +734,16 @@ def instalock_status():
 @app.get("/")
 def index():
     return jsonify({
-        "service": "Valorant Scout API",
+        "service": "1 Bullet API",
         "endpoints": ["/api/health", "/api/live", "/api/profile/<puuid>", "/api/agents",
-                      "/api/instalock/start", "/api/settings", "/api/encounters"],
+                      "/api/instalock/start", "/api/settings", "/api/encounters",
+                      "/dashboard"],
     })
+
+
+@app.get("/dashboard")
+def dashboard():
+    return send_file(os.path.join(os.path.dirname(__file__), "dashboard.html"))
 
 def _current_weapons(puuid: str) -> list:
     pass
@@ -729,7 +773,7 @@ def handle_data_request(req_type: str, params: dict | None) -> dict:
                 except Exception:
                     app.logger.exception("transport profile failed")
             if data is None:
-                data = sample_match.career(puuid)
+                return {"error": "Live player history is unavailable."}
             out = dict(data)
 
             out["weapons"] = _current_weapons(puuid)
@@ -751,7 +795,7 @@ def handle_data_request(req_type: str, params: dict | None) -> dict:
                         return d
                 except Exception:
                     app.logger.exception("transport match failed")
-            return sample_match.match_detail(match_id, subject)
+            return {"error": "Live match details are unavailable."}
 
         if req_type == "encounter":
             return encounter_log.get_one(_current_puuid(), (params.get("puuid") or "").strip()) or {}
@@ -759,7 +803,7 @@ def handle_data_request(req_type: str, params: dict | None) -> dict:
         if req_type == "recap":
 
             live_recap = session_tracker.current_recap() if _live_enabled() else None
-            return live_recap or sample_match.recap(int(params.get("seed") or 7))
+            return live_recap or {"available": False, "matches": []}
 
         if req_type == "encounters":
             owner = _current_puuid()
@@ -788,16 +832,12 @@ def handle_data_request(req_type: str, params: dict | None) -> dict:
     return {"error": f"unknown request '{req_type}'"}
 
 def _start_ws_bridge() -> None:
-    pass
     global _COMMAND_ROUTER
     import ws_server
     import scout_commands
-    import remote_ably
 
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000").rstrip("/")
     ws_port = int(os.getenv("WS_PORT", "7878"))
-    token_endpoint = os.getenv("ABLY_TOKEN_ENDPOINT",
-                               f"{frontend_url}/api/ably-token")
 
     def ws_state_provider() -> dict:
 
@@ -807,19 +847,15 @@ def _start_ws_bridge() -> None:
         board["liveInstalockEnabled"] = client.allow_live_instalock
         return board
 
-    remote_controller = remote_ably.RemoteController(
-        frontend_url=frontend_url, token_endpoint=token_endpoint,
-        board_provider=ws_state_provider, data_handler=handle_data_request)
     router = scout_commands.CommandRouter(
         instalock_worker=instalock_worker, riot_client=client,
-        board_provider=ws_state_provider, remote_controller=remote_controller)
+        board_provider=ws_state_provider, remote_controller=None)
     _COMMAND_ROUTER = router
-    remote_controller.attach_router(router)
 
     try:
         token = ws_server.start(board_provider=ws_state_provider, command_router=router,
                                 frontend_url=frontend_url, ws_port=ws_port,
-                                remote_controller=remote_controller,
+                                remote_controller=None,
                                 request_handler=handle_data_request,
                                 backend_port=int(os.getenv("BACKEND_PORT",
                                                            os.getenv("PORT", "5000"))))
@@ -859,7 +895,7 @@ if __name__ == "__main__":
 
     if not debug or os.getenv("WERKZEUG_RUN_MAIN") == "true":
         _start_ws_bridge()
-    print(f"[app] Valorant Scout API on http://127.0.0.1:{port}  "
+    print(f"[app] 1 Bullet API on http://127.0.0.1:{port}  "
           f"(source={client.source_pref}, key={'set' if client.api_key else 'unset'})",
           flush=True)
     try:

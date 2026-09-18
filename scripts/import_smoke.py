@@ -11,7 +11,6 @@ REQUIRED = [
     "pypresence",
     "websockets",
     "websockets.sync.client",
-    "ably",
     "valclient",
 ]
 

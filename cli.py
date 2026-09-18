@@ -13,7 +13,7 @@ sys.path.insert(0, str(ROOT / "backend"))
 
 os.environ["SCOUT_QUIET"] = "1"
 
-print("\n  Starting Valorant Scout...\n  The scoreboard will appear in this window in a moment.", flush=True)
+print("\n  Starting 1 Bullet...\n  The scoreboard will appear in this window in a moment.", flush=True)
 
 def _load_env():
     for p in (ROOT / ".env", ROOT / "backend" / ".env"):
@@ -37,7 +37,6 @@ except ImportError:
     print("This view needs 'rich'.  Install with:  pip install rich")
     sys.exit(1)
 
-import sample_match
 from riot_client import LocalAuth
 
 for _stream in (sys.stdout, sys.stderr):
@@ -67,7 +66,7 @@ def _set_window_title(title: str) -> None:
     except Exception:
         pass
 
-_BRIDGE_PATH = ROOT / ".scout" / "bridge.json"
+_BRIDGE_PATH = Path(os.getenv("LOCALAPPDATA", ROOT)) / "1Bullet" / "bridge.json"
 _BRIDGE_MODE = False
 _BRIDGE_LOCK = threading.Lock()
 _BRIDGE = {"board": None, "connected": False}
@@ -118,8 +117,7 @@ def _bridge_board() -> dict:
 def build_board(seed: int) -> dict:
     if _BRIDGE_MODE:
         return _bridge_board()
-    pref = os.environ.get("DATA_SOURCE", "auto").lower()
-    if pref != "demo" and LocalAuth.available():
+    if LocalAuth.available():
         try:
             import live_match
             board = live_match.LiveMatch(LocalAuth()).build_scoreboard(
@@ -132,11 +130,10 @@ def build_board(seed: int) -> dict:
                     "notice": {"level": "warn", "action": "restart_game",
                                "message": "Couldn't read VALORANT — please restart "
                                           "your game (close it completely and relaunch)."}}
-    board = sample_match.generate(seed)
-    if pref != "demo" and not LocalAuth.available():
-        board["notice"] = {"level": "info", "action": "open_game",
-                           "message": "Open VALORANT for live data (showing demo for now)."}
-    return board
+    return {"state": "OFFLINE", "stateLabel": "Offline", "source": "local",
+            "players": [], "teams": {}, "parties": [],
+            "notice": {"level": "info", "action": "open_game",
+                       "message": "Open VALORANT for live data."}}
 
 def kd_color(kd):
     if kd is None:
@@ -192,8 +189,7 @@ def _add_team(table, players, team_color):
 
 def render(board) -> Group:
     state = board.get("state")
-    is_demo = board.get("source") == "demo"
-    src = "[#FFB454]DEMO[/]" if is_demo else "[#18E5A7]LIVE · LOCAL CLIENT[/]"
+    src = "[#18E5A7]LIVE · LOCAL CLIENT[/]"
 
     state_styles = {"INGAME": "[bold #FF4655]● LIVE · IN GAME[/]",
                     "PREGAME": "[bold #FFB454]◆ AGENT SELECT[/]",
@@ -214,7 +210,7 @@ def render(board) -> Group:
         msg = ((notice or {}).get("message") or board.get("error")
                or "Open VALORANT — lobby, Agent Select or a match.")
         return Group(Panel(Text(f"No players to show.\n{msg}", justify="center"),
-                           title="VALORANT SCOUT", border_style="#FF4655", box=box.HEAVY))
+                            title="1 BULLET · Made by Saif", border_style="#FF4655", box=box.HEAVY))
 
     table = Table(box=box.SIMPLE_HEAVY, expand=False, show_edge=False, pad_edge=False,
                   header_style="bold #7E8C92", border_style="grey23")
@@ -248,7 +244,7 @@ def render(board) -> Group:
             legend.append(f"●{p['number']} ", style=f"bold {p['color']}")
             legend.append(f"{p['size']}-stack   ", style="grey62")
 
-    panel = Panel(table, title="[bold #FF4655]VALORANT[/] [bold #ECE8E1]SCOUT[/]",
+    panel = Panel(table, title="[bold #FF4655]1 BULLET[/] [bold #ECE8E1]Made by Saif[/]",
                   subtitle=head, border_style="#FF4655", box=box.HEAVY, padding=(0, 1))
     rows = [panel, legend]
     if notice:
@@ -257,10 +253,10 @@ def render(board) -> Group:
     return Group(*rows)
 
 def main():
-    ap = argparse.ArgumentParser(description="Valorant Scout terminal scoreboard")
+    ap = argparse.ArgumentParser(description="1 Bullet terminal scoreboard")
     ap.add_argument("--once", action="store_true", help="print once and exit")
     ap.add_argument("--interval", type=float, default=5.0, help="refresh seconds")
-    ap.add_argument("--seed", type=int, default=7, help="demo lobby seed")
+    ap.add_argument("--seed", type=int, default=7, help="reserved option (live data only)")
     ap.add_argument("--bridge", action="store_true",
                     help="render the backend's board over the local WebSocket "
                          "bridge; never fetch from Riot directly")
@@ -273,7 +269,7 @@ def main():
         threading.Thread(target=_bridge_loop, daemon=True,
                          name="scout-bridge").start()
 
-    _set_window_title("Valorant Scout — Scoreboard")
+    _set_window_title("1 Bullet - Scoreboard")
 
     if args.once:
         console.print(render(build_board(args.seed)))

@@ -12,7 +12,6 @@ urllib3==2.7.0
 rich==15.0.0
 pypresence==4.6.1      # Discord Rich Presence (optional; degrades if Discord/lib absent)
 websockets==13.1       # local WebSocket bridge for the hosted frontend
-ably==2.0.12           # remote/phone mode over Ably (optional; local mode works without it)
 valclient==2.28        # local Riot client API (career/match-history endpoints)
 cryptography==49.0.0   # offline-mode: convert Deceive's PKCS#12 chat cert -> PEM
 

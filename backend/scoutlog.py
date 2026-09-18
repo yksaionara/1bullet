@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import logging
+import os
 import re
 import time
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-SCOUT_DIR = Path(__file__).resolve().parent.parent / ".scout"
+SCOUT_DIR = Path(os.getenv("LOCALAPPDATA", Path.home() / "AppData" / "Local")) / "1Bullet"
 
 MAX_BYTES = 2 * 1024 * 1024
 BACKUP_COUNT = 5

@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import re
+import runpy
 import signal
 import shutil
 import socket
@@ -13,15 +14,26 @@ import time
 import urllib.request
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+FROZEN = bool(getattr(sys, "frozen", False))
+ROOT = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
 BACKEND = ROOT / "backend"
 FRONTEND = ROOT / "frontend"
 SCOUT_DIR = ROOT / ".scout"
 IS_WIN = os.name == "nt"
 
-HOSTED_FRONTEND = "https://valorantscout.com"
+HOSTED_FRONTEND = "https://yksaionara.github.io/1bullet"
+RELEASE_API = "https://api.github.com/repos/yksaionara/1bullet/releases/latest"
 
 sys.path.insert(0, str(BACKEND))
+
+if FROZEN and "--backend" in sys.argv:
+    os.chdir(BACKEND)
+    runpy.run_path(str(BACKEND / "app.py"), run_name="__main__")
+    raise SystemExit(0)
+if FROZEN and "--cli-internal" in sys.argv:
+    os.chdir(ROOT)
+    runpy.run_path(str(ROOT / "cli.py"), run_name="__main__")
+    raise SystemExit(0)
 try:
     import scoutlog
     LOG = scoutlog.get_logger("launcher")
@@ -99,7 +111,7 @@ def _fatal_dialog(message: str) -> None:
         ctypes.windll.user32.MessageBoxW(
             None,
             f"{message}\n\nDetails: {SCOUT_DIR / 'launcher.log'}",
-            "Valorant Scout", 0x10)
+            "1 Bullet", 0x10)
     except Exception:
         pass
 
@@ -115,10 +127,45 @@ def load_env():
             key, val = key.strip(), val.strip().strip('"').strip("'")
             os.environ.setdefault(key, val)
 
+
+def _version_key(version: str) -> tuple[int, int, int]:
+    parts = re.sub(r"^[vV]", "", version).split("-", 1)[0].split(".")
+    return tuple(int(parts[i]) if i < len(parts) and parts[i].isdigit() else 0 for i in range(3))
+
+
+def maybe_offer_frozen_update() -> None:
+    if not FROZEN:
+        return
+    try:
+        with urllib.request.urlopen(urllib.request.Request(
+                RELEASE_API, headers={"User-Agent": "1bullet"}), timeout=5) as response:
+            release = json.load(response)
+        latest = str(release.get("tag_name") or "")
+        current = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+        if not latest or _version_key(latest) <= _version_key(current):
+            return
+        asset = next((item for item in release.get("assets") or []
+                      if item.get("name") == "1 Bullet Setup.exe"), None)
+        url = (asset or {}).get("browser_download_url") or release.get("html_url")
+        if not url:
+            return
+        import ctypes
+        answer = ctypes.windll.user32.MessageBoxW(
+            None, f"Update available\n\nVersion {latest.lstrip('vV')}\n\nDownload Update?",
+            "1 Bullet", 0x24)
+        if answer == 6:
+            import webbrowser
+            webbrowser.open(url)
+    except Exception:
+        # Update availability must never prevent the local tracker from starting.
+        return
+
 def venv_python() -> Path:
     return ROOT / ".venv" / ("Scripts/python.exe" if IS_WIN else "bin/python")
 
 def resolve_python() -> str:
+    if FROZEN:
+        return sys.executable
     py = venv_python()
     if py.exists():
         return str(py)
@@ -127,9 +174,11 @@ def resolve_python() -> str:
         return sys.executable
     die("VS-PY-001",
         "No Python environment found (.venv is missing). "
-        "Run install.bat to set up Valorant Scout.")
+        "Run install.bat to set up 1 Bullet.")
 
 def validate_runtime(py: str) -> None:
+    if FROZEN:
+        return
     if os.environ.get("VS_PREVALIDATED", "").strip() == "1":
         return
     exact = ROOT / "scripts" / "verify_installed.py"
@@ -161,7 +210,7 @@ def _path_fingerprint() -> str:
     return hashlib.sha256(lowered.encode("utf-8")).hexdigest()[:16].upper()
 
 def _mutex_name(purpose: str) -> str:
-    return rf"Local\ValorantScout-{purpose}-{_path_fingerprint()}"
+    return rf"Local\1Bullet-{purpose}-{_path_fingerprint()}"
 
 def _my_process_tree() -> set[int]:
     mine = {os.getpid()}
@@ -204,7 +253,7 @@ def _kill_leftover_instances() -> bool:
     if not pids:
         return False
     for pid in pids:
-        say(f"A previous Valorant Scout (PID {pid}) is still closing — taking over.", C_DIM)
+        say(f"A previous 1 Bullet instance (PID {pid}) is still closing — taking over.", C_DIM)
         LOG.info("killing leftover instance pid=%s to take over", pid)
         subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"],
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -356,7 +405,7 @@ def _kill_our_stale(port) -> bool:
     for pid in _port_pids(port):
         exe = _pid_exe(pid).lower()
         if exe == root or exe.startswith(prefix) or _is_ours(pid):
-            say(f"Port {port} is held by a previous Valorant Scout instance (PID {pid}) — closing it.", C_DIM)
+            say(f"Port {port} is held by a previous 1 Bullet instance (PID {pid}) — closing it.", C_DIM)
             LOG.info("closing our stale instance pid=%s on port %s", pid, port)
             subprocess.run(["taskkill", "/PID", str(pid), "/T"],
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -383,7 +432,7 @@ def choose_port(preferred, label: str, reserved=()) -> int:
                 time.sleep(0.25)
     holder = ""
     if preferred in reserved:
-        holder = "another Valorant Scout service"
+        holder = "another 1 Bullet service"
     else:
         for pid in _port_pids(preferred):
             holder = _pid_exe(pid) or f"PID {pid}"
@@ -463,7 +512,7 @@ def run_cli():
     extra = [a for a in sys.argv[1:]
              if a not in ("--cli", "--no-cli", "--prod", "--local-frontend")]
     say("Launching terminal scoreboard…", C_OK)
-    subprocess.run([py, str(ROOT / "cli.py"), *extra])
+    subprocess.run([py, "--cli-internal", *extra] if FROZEN else [py, str(ROOT / "cli.py"), *extra])
 
 def _hidden_window() -> dict:
     if not IS_WIN:
@@ -474,7 +523,7 @@ def _hidden_window() -> dict:
 def spawn_cli_window(py: str):
     extra = [a for a in sys.argv[1:] if a not in ("--cli", "--no-cli", "--prod")]
     extra.append("--bridge")
-    cli = str(ROOT / "cli.py")
+    cli = "--cli-internal" if FROZEN else str(ROOT / "cli.py")
     try:
         if IS_WIN and ATTACHED:
             proc = subprocess.Popen([py, cli, *extra])
@@ -570,6 +619,8 @@ def shutdown(procs, grouped=()) -> None:
 def main():
     load_env()
 
+    maybe_offer_frozen_update()
+
     if "--cli" in sys.argv:
         run_cli()
         return
@@ -579,20 +630,20 @@ def main():
 
     if not acquire_instance_lock():
         LOG.info("second instance blocked")
-        say("Valorant Scout is already running or being installed/updated.", C_WARN)
-        _fatal_dialog("Valorant Scout is already running or maintenance is in progress.\n\n"
+        say("1 Bullet is already running or being installed/updated.", C_WARN)
+        _fatal_dialog("1 Bullet is already running or maintenance is in progress.\n\n"
                       "Close the app or wait for install/update to finish, then try again.")
         return
 
     if not ATTACHED:
         print(f"{C_RED}{'='*58}{C_END}")
-        print(f"{C_RED}  VALORANT SCOUT{C_END}  {C_DIM}web + terminal · live scoreboard · instalock{C_END}")
+        print(f"{C_RED}  1 BULLET{C_END}  {C_DIM}Made by Saif · live scoreboard · instalock{C_END}")
         print(f"{C_RED}{'='*58}{C_END}")
 
     source = os.environ.get("DATA_SOURCE", "auto")
     say("Live scoreboard reads your LOCAL VALORANT client — open the game and")
     say("join Agent Select / a match to see real ranks, names & parties.")
-    say(f"Otherwise a demo lobby is shown.  (DATA_SOURCE={source})")
+    say(f"When VALORANT is closed, the dashboard stays empty.  (DATA_SOURCE={source})")
     if os.environ.get("RIOT_API_KEY", "").strip():
         say("RIOT_API_KEY found (used by the legacy match-history endpoint).", C_OK)
     if os.environ.get("VS_UPDATE_AVAILABLE", "").strip():
@@ -629,6 +680,10 @@ def main():
                                             reserved={backend_port, ws_port}))
             frontend_url = (os.environ.get("LOCAL_FRONTEND_URL", "").strip()
                             or f"http://localhost:{frontend_port}").rstrip("/")
+        elif FROZEN:
+            frontend_url = f"http://127.0.0.1:{backend_port}"
+            say("Using the bundled local 1 Bullet dashboard.", C_OK)
+            say(f"Dashboard host: {frontend_url}")
         else:
             frontend_url = (os.environ.get("FRONTEND_URL", "").strip()
                             or HOSTED_FRONTEND).rstrip("/")
@@ -654,7 +709,8 @@ def main():
             out = {"stdout": backend_log_fh, "stderr": subprocess.STDOUT}
         if IS_WIN:
             out["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
-        backend_proc = subprocess.Popen([py, "app.py"], cwd=str(BACKEND), env=child_env, **out)
+        backend_cmd = [py, "--backend"] if FROZEN else [py, "app.py"]
+        backend_proc = subprocess.Popen(backend_cmd, cwd=str(BACKEND), env=child_env, **out)
         procs.append(backend_proc)
         roles[backend_proc] = "backend"
         if IS_WIN:
@@ -762,9 +818,9 @@ def _report_crash():
             last = tb.strip().splitlines()[-1]
             ctypes.windll.user32.MessageBoxW(
                 None,
-                f"Valorant Scout couldn't start.\n\n{last}\n\n"
+                f"1 Bullet couldn't start.\n\n{last}\n\n"
                 f"Details were saved to:\n{log}",
-                "Valorant Scout", 0x10)
+                "1 Bullet", 0x10)
         except Exception:
             pass
 

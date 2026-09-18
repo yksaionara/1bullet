@@ -12,7 +12,7 @@ import discord_presence
 from riot_client import LocalAuth, _self_presence_private
 from vconstants import APP_VERSION
 
-_SYNC_URL = os.getenv("SCOUT_SYNC_URL", "https://valorantscout.com/api/sync")
+_SYNC_URL = os.getenv("SCOUT_SYNC_URL", "")
 _INTERVAL = 60
 _worker: "_Worker | None" = None
 
@@ -33,7 +33,7 @@ def observe(board: dict) -> None:
 
 def maybe_start() -> None:
     global _worker
-    if os.getenv("SCOUT_SYNC", "true").strip().lower() == "false":
+    if not _SYNC_URL or os.getenv("SCOUT_SYNC", "false").strip().lower() != "true":
         return
     if _worker is not None:
         return

@@ -25,8 +25,8 @@ function Finish-Progress([string]$text) {
 }
 
 Write-Host ""
-Write-Host "  VALORANT " -ForegroundColor Red -NoNewline
-Write-Host "SCOUT" -ForegroundColor White
+Write-Host "  1 BULLET" -ForegroundColor Red
+Write-Host "  Made by Saif" -ForegroundColor DarkGray
 Write-Host ""
 
 Write-ScoutLog -Log launcher -Message "startup requested (v$(Get-LocalVersion))"
@@ -37,7 +37,7 @@ $markers = Test-Markers
 if (-not $markers.Ok) {
     Write-Host ""
     Write-ScoutLog -Log launcher -Level ERROR -Code VS-DEPS-001 -Message "startup blocked: $($markers.Reason)"
-    Show-FatalDialog "Valorant Scout can't start: $($markers.Reason).`n`nRun install.bat to repair (your settings and data are kept)." "launcher"
+    Show-FatalDialog "1 Bullet can't start: $($markers.Reason).`n`nRun install.bat to repair (your settings and data are kept)." "launcher"
     exit 1
 }
 $venv = Test-Venv -Quick
@@ -48,7 +48,7 @@ if (-not $venv.Ok) {
         if ($r -match 'python|venv') { $code = "VS-PY-001" }
         Write-ScoutLog -Log launcher -Level ERROR -Code $code -Message "startup blocked: $r"
     }
-    Show-FatalDialog "Valorant Scout can't start: $($venv.Reasons[0]).`n`nRun install.bat to repair (your settings and data are kept)." "launcher"
+    Show-FatalDialog "1 Bullet can't start: $($venv.Reasons[0]).`n`nRun install.bat to repair (your settings and data are kept)." "launcher"
     exit 1
 }
 
@@ -87,7 +87,7 @@ if (-not (Test-Path (Join-Path $Root ".git"))) {
 }
 
 
-Show-Phase 3 "Starting Valorant Scout..."
+Show-Phase 3 "Starting 1 Bullet..."
 Stop-RunningApp "launcher" | Out-Null
 
 

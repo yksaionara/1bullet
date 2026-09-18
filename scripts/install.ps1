@@ -6,7 +6,7 @@
 . (Join-Path $PSScriptRoot "common.ps1")
 
 Write-Host ""
-Write-Host "  VALORANT SCOUT - SETUP" -ForegroundColor Red
+Write-Host "  1 BULLET - SETUP" -ForegroundColor Red
 Write-Host "  Installs (or repairs) everything the app needs. Safe to re-run any time." -ForegroundColor DarkGray
 
 $lock = $null
@@ -14,9 +14,9 @@ $maintenanceMutex = $null
 $appMutex = $null
 try {
     $lock = New-ScoutLock "install"
-    $maintenanceMutex = New-ScoutMutex "Maintenance" "Another Valorant Scout install/update operation is already running. Wait for it to finish and retry."
+    $maintenanceMutex = New-ScoutMutex "Maintenance" "Another 1 Bullet install/update operation is already running. Wait for it to finish and retry."
     Stop-RunningApp "install" | Out-Null
-    $appMutex = New-ScoutMutex "App" "Valorant Scout is still running and couldn't be closed automatically. Close the scoreboard window, then run install.bat again."
+    $appMutex = New-ScoutMutex "App" "1 Bullet is still running and couldn't be closed automatically. Close the scoreboard window, then run install.bat again."
     Write-ScoutLog -Log install -Message "install/repair started (v$(Get-LocalVersion), tree=$(if ($HasFrontend) { 'full' } else { 'slim' }))"
 
     Step "Checking this PC ..."
@@ -97,7 +97,7 @@ try {
 
     Write-Host ""
     Ok "Setup complete!"
-    Write-Host "  Launch the app any time with start.bat (or the Valorant Scout desktop shortcut)." -ForegroundColor Green
+    Write-Host "  Launch the app any time with start.bat (or the 1 Bullet desktop shortcut)." -ForegroundColor Green
     exit 0
 } catch {
     Write-Host ""

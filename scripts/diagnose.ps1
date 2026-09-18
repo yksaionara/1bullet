@@ -17,7 +17,7 @@ function Bad([string]$line) { $script:exitCode = 1; DiagLine "[X] $line" }
 function Good([string]$line) { DiagLine "[OK] $line" }
 
 Write-Host ""
-Write-Host "  VALORANT SCOUT - DIAGNOSTICS" -ForegroundColor Red
+Write-Host "  1 BULLET - DIAGNOSTICS" -ForegroundColor Red
 
 
 RSection "App"
@@ -116,11 +116,11 @@ function Get-PortOwner([int]$port) {
 
             if ($exe) {
                 $exeLower = $exe.ToLower()
-                if ($exeLower -eq $rootLower -or $exeLower.StartsWith($rootLower + '\')) { return "ours (Valorant Scout, PID $portPid)" }
+                if ($exeLower -eq $rootLower -or $exeLower.StartsWith($rootLower + '\')) { return "ours (1 Bullet, PID $portPid)" }
             }
             if ($proc.CommandLine) {
                 $cmdLower = $proc.CommandLine.ToLower()
-                if ($cmdLower -eq $rootLower -or $cmdLower.Contains($rootLower + '\')) { return "ours (Valorant Scout, PID $portPid)" }
+                if ($cmdLower -eq $rootLower -or $cmdLower.Contains($rootLower + '\')) { return "ours (1 Bullet, PID $portPid)" }
             }
             return "foreign: $(Split-Path -Leaf ($exe + '')) (PID $portPid)"
         } catch { return "unknown process (PID $portPid)" }
@@ -158,8 +158,8 @@ DiagLine "websocket port $wsPort`: $(Get-PortOwner $wsPort)"
 RSection "Running app"
 try {
     $h = Invoke-RestMethod -Uri "http://127.0.0.1:$backendPort/api/health" -TimeoutSec 3
-    if ($h.service -ne "valorant-scout") {
-        Bad "port $backendPort answered, but it is not Valorant Scout"
+    if ($h.service -ne "1bullet") {
+        Bad "port $backendPort answered, but it is not 1 Bullet"
     } elseif (-not $h.wsReady -or [int]$h.wsPort -ne $wsPort) {
         Bad "backend is up but its authenticated WebSocket self-check is not ready"
     } else {
@@ -187,7 +187,7 @@ DiagLine "Discord desktop: $(if ($discord) { 'running (Rich Presence possible)' 
 
 
 RSection "Network"
-$frontend = "https://valorantscout.com"
+$frontend = "https://yksaionara.github.io/1bullet"
 if (Test-Path $EnvFile) {
     $fu = Get-Content $EnvFile -Encoding UTF8 | Select-String '^\s*FRONTEND_URL\s*=\s*(\S+)'
     if ($fu) { $frontend = $fu.Matches[0].Groups[1].Value }
@@ -198,7 +198,7 @@ try {
 } catch { Bad "hosted dashboard NOT reachable ($frontend): $($_.Exception.Message)" }
 try {
     $null = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" `
-        -Headers @{ "User-Agent" = "valorant-scout" } -TimeoutSec 8
+        -Headers @{ "User-Agent" = "1bullet" } -TimeoutSec 8
     Good "update endpoint reachable"
 } catch { DiagLine "update endpoint: not reachable (updates would be skipped)" }
 
@@ -221,7 +221,7 @@ if ($Bundle) {
     $dest = $BundlePath
     if (-not $dest) {
         $dest = Join-Path ([Environment]::GetFolderPath("Desktop")) `
-            ("valorant-scout-support-" + [DateTime]::UtcNow.ToString("yyyyMMdd-HHmmss") + ".zip")
+            ("1bullet-support-" + [DateTime]::UtcNow.ToString("yyyyMMdd-HHmmss") + ".zip")
     }
     $work = Join-Path $env:TEMP ("vs-bundle-" + [Guid]::NewGuid().ToString("N"))
     New-Item -ItemType Directory -Path $work | Out-Null

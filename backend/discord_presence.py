@@ -80,7 +80,7 @@ def maybe_start(region: str | None = None) -> None:
     _worker = _Worker(region)
     _worker.start()
 
-_BUTTONS = [{"label": "Get Valorant Scout", "url": "https://github.com/kryotrades/valorant-scout"}]
+_BUTTONS = [{"label": "Get 1 Bullet", "url": "https://github.com/yksaionara/1bullet"}]
 
 class _Worker:
     def __init__(self, region: str | None):

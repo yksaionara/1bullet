@@ -30,7 +30,7 @@ LOG = scoutlog.get_logger("ws", "websocket")
 
 PROTOCOL_VERSION = 1
 SUPPORTED_PROTOCOLS = {1}
-CAPABILITIES = ["state", "commands", "requests", "remote"]
+CAPABILITIES = ["state", "commands", "requests"]
 
 CLOSE_AUTH = 4401
 CLOSE_ORIGIN = 4403
@@ -207,7 +207,7 @@ def start(*, board_provider, command_router, frontend_url: str, ws_port: int,
                     "supported": sorted(SUPPORTED_PROTOCOLS),
                     "appVersion": APP_VERSION,
                     "message": "This dashboard is not compatible with the installed "
-                               "Valorant Scout version. Run UPDATE.bat to update the app."})
+                                "1 Bullet version. Run UPDATE.bat to update the app."})
                 await websocket.close(code=CLOSE_PROTOCOL, reason="Incompatible protocol")
                 return
 
@@ -350,10 +350,10 @@ def _spawn_opener(frontend_url: str, url: str, backend_port: int | None) -> None
             import ctypes
             ctypes.windll.user32.MessageBoxW(
                 None,
-                "Valorant Scout couldn't open your default browser.\n\n"
+                "1 Bullet couldn't open your default browser.\n\n"
                 "Copy this private one-time dashboard URL (Ctrl+C copies this dialog):\n\n"
                 + url,
-                "Valorant Scout", 0x30)
+                "1 Bullet", 0x30)
         except Exception:
             _log("couldn't open your browser automatically; set a default browser and restart")
 

@@ -113,7 +113,7 @@ function Restore-FromBackup($state) {
 }
 
 Write-Host ""
-Write-Host "  VALORANT SCOUT - UPDATE" -ForegroundColor Red
+Write-Host "  1 BULLET - UPDATE" -ForegroundColor Red
 
 $lock = $null
 $maintenanceMutex = $null
@@ -121,9 +121,9 @@ $appMutex = $null
 $staging = $null
 try {
     $lock = New-ScoutLock "update"
-    $maintenanceMutex = New-ScoutMutex "Maintenance" "Another Valorant Scout install/update operation is already running. Wait for it to finish and retry."
+    $maintenanceMutex = New-ScoutMutex "Maintenance" "Another 1 Bullet install/update operation is already running. Wait for it to finish and retry."
     Stop-RunningApp "update" | Out-Null
-    $appMutex = New-ScoutMutex "App" "Valorant Scout is still running and couldn't be closed automatically. Close the scoreboard window before updating."
+    $appMutex = New-ScoutMutex "App" "1 Bullet is still running and couldn't be closed automatically. Close the scoreboard window before updating."
 
 
 
@@ -161,7 +161,7 @@ try {
     if ($LocalAssets) {
         if (-not $ExpectVersion) { throw "-LocalAssets requires -ExpectVersion." }
         $newVersion = $ExpectVersion
-        $zipName  = "valorant-scout-v$newVersion.zip"
+        $zipName  = "1bullet-v$newVersion.zip"
         $zip      = Join-Path $LocalAssets $zipName
         if (-not (Test-Path $zip)) { throw "missing local asset: $zip" }
         Note "Using local assets from $LocalAssets (v$newVersion)."
@@ -176,7 +176,7 @@ try {
         }
         Step "Updating v$(Get-LocalVersion) -> v$newVersion ..."
 
-        $zipName = "valorant-scout-v$newVersion.zip"
+        $zipName = "1bullet-v$newVersion.zip"
         $zipUrl = $null
         foreach ($a in $rel.assets) { if ($a.name -eq $zipName) { $zipUrl = $a.browser_download_url } }
         if (-not $zipUrl) {
@@ -189,7 +189,7 @@ try {
         for ($i = 1; $i -le 3; $i++) {
             try {
                 Invoke-WebRequest -Uri $zipUrl -OutFile $zip `
-                    -Headers @{ "User-Agent" = "valorant-scout" } -TimeoutSec 300
+                    -Headers @{ "User-Agent" = "1bullet" } -TimeoutSec 300
                 $okDl = $true; break
             } catch {
                 Warn2 "download hiccup ($($_.Exception.Message)) - retrying ($i/3) ..."
@@ -227,7 +227,7 @@ try {
 
     $newRoot = $extract
     if (-not (Test-Path (Join-Path $newRoot "backend"))) {
-        $inner = Join-Path $extract "valorant-scout-v$newVersion"
+        $inner = Join-Path $extract "1bullet-v$newVersion"
         if (Test-Path (Join-Path $inner "backend")) { $newRoot = $inner }
     }
     if (-not (Test-Path (Join-Path $newRoot "backend")) -or -not (Test-Path (Join-Path $newRoot "VERSION"))) {
@@ -351,7 +351,7 @@ try {
         Note "Boot-checking the updated app (ports $bport/$wport) ..."
         $bootEnv = @{
             BACKEND_PORT = "$bport"; WS_PORT = "$wport"
-            SCOUT_NO_BROWSER = "1"; SCOUT_SYNC = "false"; DATA_SOURCE = "demo"
+            SCOUT_NO_BROWSER = "1"; SCOUT_SYNC = "false"; DATA_SOURCE = "local"
         }
         $oldBootEnv = @{}
         foreach ($k in $bootEnv.Keys) {
@@ -368,7 +368,7 @@ try {
                 if ($proc.HasExited) { break }
                 try {
                     $r = Invoke-RestMethod -Uri "http://127.0.0.1:$bport/api/health" -TimeoutSec 2
-                    if ($r.ok -and $r.service -eq "valorant-scout" -and $r.wsReady -and
+                    if ($r.ok -and $r.service -eq "1bullet" -and $r.wsReady -and
                             [int]$r.wsPort -eq $wport) { $healthy = $true; break }
                 } catch { Start-Sleep -Milliseconds 700 }
             }
