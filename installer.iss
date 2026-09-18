@@ -11,18 +11,32 @@ AppId={{E4573C10-739D-4F97-BE87-405C8A928D8C}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher={#AppPublisher}
-DefaultDirName={autopf}\1 Bullet
+AppPublisherURL=https://github.com/yksaionara/1bullet
+AppSupportURL=https://github.com/yksaionara/1bullet/issues
+AppUpdatesURL=https://github.com/yksaionara/1bullet/releases
+DefaultDirName={localappdata}\Programs\1 Bullet
 DefaultGroupName=1 Bullet
+DisableProgramGroupPage=yes
 OutputDir=dist
 OutputBaseFilename=1 Bullet Setup
-Compression=lzma
-SolidCompression=yes
+SetupIconFile=assets\1bullet.ico
 UninstallDisplayName=1 Bullet
+UninstallDisplayIcon={app}\1bullet.exe
+LicenseFile=LICENSE
+WizardStyle=modern
+Compression=lzma2
+SolidCompression=yes
 PrivilegesRequired=lowest
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
+CloseApplications=yes
+RestartApplications=no
 
 [Files]
 Source: "dist\1bullet.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\1bullet-backend.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion
+Source: "NOTICE"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\1 Bullet"; Filename: "{app}\1bullet.exe"
