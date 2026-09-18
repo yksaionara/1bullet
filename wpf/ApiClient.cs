@@ -79,6 +79,24 @@ public sealed class ApiClient
             $"{_baseUrl}/api/settings/background", ct).ConfigureAwait(false);
     }
 
+    public async Task<CareerDto?> GetProfileAsync(string puuid, CancellationToken ct = default)
+    {
+        using var response = await _http.GetAsync(
+            $"{_baseUrl}/api/profile/{Uri.EscapeDataString(puuid)}", ct).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode) return null;
+        return await response.Content.ReadFromJsonAsync<CareerDto>(Json, ct).ConfigureAwait(false);
+    }
+
+    public async Task<MatchDetailDto?> GetMatchAsync(
+        string matchId, string? subject, CancellationToken ct = default)
+    {
+        var url = $"{_baseUrl}/api/match/{Uri.EscapeDataString(matchId)}";
+        if (!string.IsNullOrWhiteSpace(subject)) url += $"?subject={Uri.EscapeDataString(subject)}";
+        using var response = await _http.GetAsync(url, ct).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode) return null;
+        return await response.Content.ReadFromJsonAsync<MatchDetailDto>(Json, ct).ConfigureAwait(false);
+    }
+
     public async Task RequestShutdownAsync(CancellationToken ct = default)
     {
         try

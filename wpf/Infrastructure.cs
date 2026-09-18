@@ -78,6 +78,32 @@ public sealed class StringEmptyToCollapsedConverter : IValueConverter
         throw new NotSupportedException();
 }
 
+public sealed class KdToBrushConverter : IValueConverter
+{
+    // Mirrors the original board: strong K/D green, weak red, middling white.
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        try
+        {
+            if (value is null) return new SolidColorBrush(Color.FromRgb(0x9A, 0xA4, 0xAB));
+            var kd = System.Convert.ToDouble(value, CultureInfo.InvariantCulture);
+            Color color = kd >= 1.2 ? Color.FromRgb(0x18, 0xE5, 0xA7)
+                : kd < 1.0 ? Color.FromRgb(0xFF, 0x46, 0x55)
+                : Color.FromRgb(0xEC, 0xE8, 0xE1);
+            var brush = new SolidColorBrush(color);
+            brush.Freeze();
+            return brush;
+        }
+        catch
+        {
+            return new SolidColorBrush(Color.FromRgb(0x9A, 0xA4, 0xAB));
+        }
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
 public sealed class HexToBrushConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)

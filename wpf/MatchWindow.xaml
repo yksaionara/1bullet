@@ -1,0 +1,75 @@
+<Window x:Class="OneBullet.MatchWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Match — 1 Bullet" Height="640" Width="820"
+        MinWidth="680" MinHeight="480"
+        WindowStartupLocation="CenterOwner"
+        Background="#0A0E13">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="22,18">
+            <DockPanel>
+                <Button Content="✕" DockPanel.Dock="Right" VerticalAlignment="Top"
+                        Style="{StaticResource GhostButton}" Padding="10,4"
+                        Click="Close_Click" />
+                <StackPanel>
+                    <TextBlock Text="{Binding Title}" FontSize="22" FontWeight="Black"
+                               Foreground="{StaticResource TextBrush}" />
+                    <TextBlock Text="{Binding Summary}" FontSize="13" Margin="0,4,0,0"
+                               Foreground="{StaticResource DimBrush}"
+                               Visibility="{Binding Summary, Converter={StaticResource StringEmptyToCollapsed}}" />
+                </StackPanel>
+            </DockPanel>
+            <ItemsControl ItemsSource="{Binding Teams}" Margin="0,14,0,0">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="0,0,0,14">
+                            <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="Bold"
+                                       Margin="0,0,0,8"
+                                       Foreground="{DynamicResource AccentBrush}" />
+                            <ItemsControl ItemsSource="{Binding Players}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                                                CornerRadius="8" Background="#0D1319" Padding="10"
+                                                Margin="0,0,0,6">
+                                            <DockPanel>
+                                                <Grid Width="38" Height="38" Margin="0,0,12,0">
+                                                    <Border Background="#1C2A36" CornerRadius="6" />
+                                                    <Image Source="{Binding AgentPortrait}"
+                                                           Stretch="UniformToFill" />
+                                                </Grid>
+                                                <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Kda}" FontSize="13"
+                                                               FontWeight="Bold" HorizontalAlignment="Right"
+                                                               Foreground="{StaticResource TextBrush}" />
+                                                    <TextBlock Text="{Binding Detail}" FontSize="11"
+                                                               HorizontalAlignment="Right"
+                                                               Foreground="{StaticResource DimBrush}" />
+                                                </StackPanel>
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding Dto.Name}" FontSize="13"
+                                                                   FontWeight="Bold"
+                                                                   Foreground="{StaticResource TextBrush}" />
+                                                        <TextBlock Text="MVP" FontSize="10" FontWeight="Bold"
+                                                                   Margin="8,0,0,0" VerticalAlignment="Center"
+                                                                   Foreground="#FFD75F"
+                                                                   Visibility="{Binding Dto.IsMatchMvp, Converter={StaticResource BoolToVisible}}" />
+                                                    </StackPanel>
+                                                    <TextBlock FontSize="11"
+                                                               Foreground="{StaticResource DimBrush}">
+                                                        <Run Text="{Binding Dto.Agent, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding Dto.Rank, Mode=OneWay}" />
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</Window>

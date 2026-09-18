@@ -33,42 +33,37 @@ public sealed class PlayerViewModel : ObservableObject
     public PlayerDto Dto { get; }
     public SkinViewModel Vandal { get; }
     public SkinViewModel Phantom { get; }
+    public SkinViewModel OperatorSkin { get; }
+    public SkinViewModel SheriffSkin { get; }
+    public Action<PlayerViewModel>? OpenProfile { get; set; }
+    public RelayCommand OpenProfileCommand { get; }
 
     public ImageSource? AgentPortrait { get => _agentPortrait; set => Set(ref _agentPortrait, value); }
     public ImageSource? RankIcon { get => _rankIcon; set => Set(ref _rankIcon, value); }
     public ImageSource? CardBanner { get => _cardBanner; set => Set(ref _cardBanner, value); }
+    private ImageSource? _peakIcon;
+    public ImageSource? PeakIcon { get => _peakIcon; set => Set(ref _peakIcon, value); }
+
+    private ImageSource? _splash;
+    public ImageSource? Splash { get => _splash; set => Set(ref _splash, value); }
 
     public string DisplayName => string.IsNullOrWhiteSpace(Dto.Name) ? "Player" : Dto.Name;
     public string HiddenTag => Dto.NameHidden ? "  (hidden)" : "";
-    public string SubLine
-    {
-        get
-        {
-            var parts = new List<string>();
-            if (!string.IsNullOrWhiteSpace(Dto.Agent)) parts.Add(Dto.Agent);
-            parts.Add(string.IsNullOrWhiteSpace(Dto.Rank) ? "Unranked" : Dto.Rank);
-            parts.Add($"{Dto.Rr} RR");
-            if (!string.IsNullOrWhiteSpace(Dto.Selection)) parts.Add(Dto.Selection);
-            return string.Join(" · ", parts);
-        }
-    }
-    public string StatsLine
-    {
-        get
-        {
-            string F(double? v, string suffix = "") => v.HasValue ? $"{v.Value}{suffix}" : "—";
-            return $"K/D {F(Dto.Kd)} · WR {F(Dto.WinRate, "%")} ({Dto.Games}) · HS {F(Dto.HsPct, "%")} · Lv {Dto.Level}{(Dto.LevelHidden ? " *" : "")}";
-        }
-    }
-    public string PeakLine
-    {
-        get
-        {
-            var peak = string.IsNullOrWhiteSpace(Dto.PeakRank) ? "—" : Dto.PeakRank;
-            if (!string.IsNullOrWhiteSpace(Dto.PeakAct)) peak += $" ({Dto.PeakAct})";
-            return $"Peak {peak} · Prev {Dto.PreviousRank}";
-        }
-    }
+    public string TitleLine => string.IsNullOrWhiteSpace(Dto.Title) ? "" : $"“{Dto.Title}”";
+    public string RankName => string.IsNullOrWhiteSpace(Dto.Rank) ? "Unranked" : Dto.Rank;
+    public string RrText => $"{Dto.Rr}RR";
+    public string RrDeltaText => !Dto.RrEarned.HasValue || Dto.RrEarned.Value == 0 ? ""
+        : Dto.RrEarned.Value > 0 ? $"+{Dto.RrEarned.Value}" : $"{Dto.RrEarned.Value}";
+    public string RrDeltaColor => !Dto.RrEarned.HasValue || Dto.RrEarned.Value == 0 ? "#9AA4AB"
+        : Dto.RrEarned.Value > 0 ? "#18E5A7" : "#FF4655";
+    public double? KdValue => Dto.Kd;
+    public string KdText => Dto.Kd.HasValue ? $"{Dto.Kd.Value:0.00}" : "—";
+    public string HsText => Dto.HsPct.HasValue ? $"{Dto.HsPct.Value:0}%" : "—";
+    public string WinText => Dto.WinRate.HasValue ? $"{Dto.WinRate.Value:0}%" : "—";
+    public string LvlText => $"{Dto.Level}";
+    public string AgentUpper => (Dto.Agent ?? "—").ToUpperInvariant();
+    public string RoleUpper => (Dto.Role ?? "").ToUpperInvariant();
+    public string PeakRankName => string.IsNullOrWhiteSpace(Dto.PeakRank) ? "—" : Dto.PeakRank;
     public bool HasParty => Dto.Party is not null;
     public string PartyText => Dto.Party is null ? "" : $"Party {Dto.Party.Number}";
     public string PartyColor => Dto.Party?.Color ?? "#888888";
@@ -95,6 +90,9 @@ public sealed class PlayerViewModel : ObservableObject
         _images = images;
         Vandal = MakeSkin("Vandal", dto);
         Phantom = MakeSkin("Phantom", dto);
+        OperatorSkin = MakeSkin("Operator", dto);
+        SheriffSkin = MakeSkin("Sheriff", dto);
+        OpenProfileCommand = new RelayCommand(_ => OpenProfile?.Invoke(this));
         _ = LoadImagesAsync();
     }
 
@@ -113,8 +111,10 @@ public sealed class PlayerViewModel : ObservableObject
             AgentPortrait = portrait;
             var rank = await _images.GetAsync(Dto.RankIcon).ConfigureAwait(true);
             RankIcon = rank;
+            PeakIcon = await _images.GetAsync(Dto.PeakIcon).ConfigureAwait(true);
             var banner = await _images.GetAsync(Dto.PlayerCard).ConfigureAwait(true);
             CardBanner = banner;
+            Splash = await _images.GetAsync(Dto.AgentArt).ConfigureAwait(true);
             Vandal.Icon = await _images.GetAsync(
                 Dto.Weapons.FirstOrDefault(w => w.Weapon == "Vandal")?.Skin?.Icon).ConfigureAwait(true);
             Phantom.Icon = await _images.GetAsync(
@@ -125,6 +125,73 @@ public sealed class PlayerViewModel : ObservableObject
 }
 
 
+
+public sealed class PartyPillViewModel
+{
+    public PartyPillViewModel(PartyDto party)
+    {
+        Text = $"PARTY {party.Number} · {party.Size}-STACK";
+        Color = string.IsNullOrWhiteSpace(party.Color) ? "#888888" : party.Color;
+    }
+
+    public string Text { get; }
+    public string Color { get; }
+}
+
+public sealed class TeamPanelViewModel : ObservableObject
+{
+    private ImageSource? _avgRankIcon;
+
+    public TeamPanelViewModel(string title, int count, bool isSelfTeam)
+    {
+        Title = title;
+        Count = count;
+        IsSelfTeam = isSelfTeam;
+    }
+
+    public string Title { get; }
+    public int Count { get; }
+    public bool IsSelfTeam { get; }
+    public ObservableCollection<PlayerViewModel> Players { get; } = new();
+
+    public string AvgRank { get; private set; } = "";
+    public string AvgRankColor { get; private set; } = "#9AA4AB";
+    public string AvgKd { get; private set; } = "—";
+    public string AvgWr { get; private set; } = "—";
+    public string Smurfs { get; private set; } = "0";
+    public string SmurfColor { get; private set; } = "#9AA4AB";
+    public bool HasAverages { get; private set; }
+    public ImageSource? AvgRankIcon { get => _avgRankIcon; set => Set(ref _avgRankIcon, value); }
+
+    public void ApplyStats(TeamStatDto? stats)
+    {
+        if (stats is null || string.IsNullOrWhiteSpace(stats.AvgRank) || stats.AvgRank == "Unranked")
+        {
+            HasAverages = false;
+            return;
+        }
+        HasAverages = true;
+        AvgRank = stats.AvgRank;
+        AvgRankColor = string.IsNullOrWhiteSpace(stats.RankColor) ? "#9AA4AB" : stats.RankColor;
+        AvgKd = stats.AvgKd.HasValue ? $"{stats.AvgKd.Value:0.00}" : "—";
+        AvgWr = stats.AvgWinRate.HasValue ? $"{stats.AvgWinRate.Value:0}%" : "—";
+        Smurfs = $"{stats.SmurfCount}";
+        SmurfColor = stats.SmurfCount > 0 ? "#FF4655" : "#9AA4AB";
+        Raise(nameof(AvgRank));
+        Raise(nameof(AvgRankColor));
+        Raise(nameof(AvgKd));
+        Raise(nameof(AvgWr));
+        Raise(nameof(Smurfs));
+        Raise(nameof(SmurfColor));
+        Raise(nameof(HasAverages));
+    }
+
+    public async Task LoadIconAsync(ImageCache images, string? url)
+    {
+        try { AvgRankIcon = await images.GetAsync(url).ConfigureAwait(true); }
+        catch { }
+    }
+}
 
 public sealed class MainViewModel : ObservableObject
 {
@@ -139,8 +206,6 @@ public sealed class MainViewModel : ObservableObject
     private int _boardFailures;
     private string _bgKey = "";
 
-    private string _stateLabel = "Starting…";
-    private string _scoreLine = "";
     private string _noticeText = "";
     private bool _hasNotice;
     private string _emptyMessage = "Open VALORANT — lobby, Agent Select or a match.";
@@ -153,7 +218,8 @@ public sealed class MainViewModel : ObservableObject
     private string? _updateUrl;
     private string _backendVersion = "";
 
-    public ObservableCollection<PlayerViewModel> AllPlayers { get; } = new();
+    public ObservableCollection<TeamPanelViewModel> TeamPanels { get; } = new();
+    public ObservableCollection<PartyPillViewModel> PartyPills { get; } = new();
     public IReadOnlyList<string> AccentPresets { get; } =
         new[] { "#FF4655", "#18E5A7", "#9ADEFF", "#FFB454", "#D864C7", "#ECE8E1" };
 
@@ -164,12 +230,29 @@ public sealed class MainViewModel : ObservableObject
     public string VersionText => $"v{AppVersion}";
     public BackendManager Backend => _backend;
 
-    public string StateLabel { get => _stateLabel; set => Set(ref _stateLabel, value); }
-    public string ScoreLine { get => _scoreLine; set => Set(ref _scoreLine, value); }
     public string NoticeText { get => _noticeText; set => Set(ref _noticeText, value); }
     public bool HasNotice { get => _hasNotice; set => Set(ref _hasNotice, value); }
     public string EmptyMessage { get => _emptyMessage; set => Set(ref _emptyMessage, value); }
-    public bool HasPlayers => AllPlayers.Count > 0;
+    public bool HasPlayers => TeamPanels.Sum(t => t.Players.Count) > 0;
+
+    private string _matchStateText = "";
+    private string _matchStateColor = "#888888";
+    private string _mapName = "";
+    private string _modeName = "";
+    private string _scoreText = "";
+    private string _sideText = "";
+    private string _sideColor = "#18E5A7";
+    private int? _winProb;
+
+    public string MatchStateText { get => _matchStateText; set => Set(ref _matchStateText, value); }
+    public string MatchStateColor { get => _matchStateColor; set => Set(ref _matchStateColor, value); }
+    public string MapName { get => _mapName; set => Set(ref _mapName, value); }
+    public string ModeName { get => _modeName; set => Set(ref _modeName, value); }
+    public string ScoreText { get => _scoreText; set => Set(ref _scoreText, value); }
+    public string SideText { get => _sideText; set => Set(ref _sideText, value); }
+    public string SideColor { get => _sideColor; set => Set(ref _sideColor, value); }
+    public int? WinProb { get => _winProb; set => Set(ref _winProb, value); }
+    public bool HasWinProb => WinProb.HasValue;
     public string AccentHex { get => _accentHex; set => Set(ref _accentHex, value); }
     public bool StartWithWindows { get => _startWithWindows; set => Set(ref _startWithWindows, value); }
     public bool HasBackground { get => _hasBackground; set => Set(ref _hasBackground, value); }
@@ -273,53 +356,82 @@ public sealed class MainViewModel : ObservableObject
         if (board is null)
         {
             if (++_boardFailures >= 3)
-                StateLabel = "Reconnecting…";
+                MatchStateText = "RECONNECTING…";
             return;
         }
         _boardFailures = 0;
-        StateLabel = string.IsNullOrWhiteSpace(board.StateLabel) ? board.State : board.StateLabel;
-        ScoreLine = BuildScoreLine(board);
+        var stateLabel = string.IsNullOrWhiteSpace(board.StateLabel) ? board.State : board.StateLabel;
+        (MatchStateText, MatchStateColor) = board.State switch
+        {
+            "INGAME" => ($"● LIVE · {stateLabel.ToUpperInvariant()}", "#FF4655"),
+            "PREGAME" => ($"◆ {stateLabel.ToUpperInvariant()}", "#FFB454"),
+            "MENUS" => ($"◆ {stateLabel.ToUpperInvariant()}", "#18E5A7"),
+            _ => (stateLabel.ToUpperInvariant(), "#888888"),
+        };
+        MapName = (board.Map ?? "").ToUpperInvariant();
+        ModeName = (board.Mode ?? "").ToUpperInvariant();
+        ScoreText = board.Score is not null && board.State == "INGAME"
+            ? board.Score.Round.HasValue
+                ? $"{board.Score.Ally} : {board.Score.Enemy}  RD {board.Score.Round}"
+                : $"{board.Score.Ally} : {board.Score.Enemy}"
+            : board.LockProgress is not null && board.State == "PREGAME"
+            ? $"{board.LockProgress.Locked}/{board.LockProgress.Total} LOCKED"
+            : "";
+        SideText = (board.Side ?? "").ToUpperInvariant();
+        SideColor = string.Equals(board.Side, "Attacker", StringComparison.OrdinalIgnoreCase)
+            ? "#FF4655" : "#18E5A7";
+        WinProb = board.State == "INGAME" ? board.WinProb : null;
+        Raise(nameof(HasWinProb));
         HasNotice = !string.IsNullOrWhiteSpace(board.Notice?.Message);
         NoticeText = board.Notice?.Message ?? "";
         EmptyMessage = !string.IsNullOrWhiteSpace(board.Notice?.Message) ? board.Notice!.Message
             : !string.IsNullOrWhiteSpace(board.Error) ? board.Error
             : "Open VALORANT — lobby, Agent Select or a match.";
 
-        // Single grid in board order, mirroring the web dashboard. Team
-        // affiliation is shown as a tag on each card instead of sections.
-        AllPlayers.Clear();
-        var twoTeams = board.Teams.Count == 2;
-        foreach (var p in board.Players)
+        PartyPills.Clear();
+        foreach (var party in board.Parties.OrderBy(p => p.Number))
+            PartyPills.Add(new PartyPillViewModel(party));
+
+        TeamPanels.Clear();
+        var orderedTeams = board.Teams.OrderByDescending(kv => kv.Key == board.SelfTeam).ToList();
+        if (orderedTeams.Count == 0 && board.Players.Count > 0)
+            orderedTeams = new List<KeyValuePair<string, List<PlayerDto>>>
+                { new("Blue", board.Players) };
+        foreach (var (team, players) in orderedTeams)
         {
-            var vm = new PlayerViewModel(p, _images);
-            if (twoTeams && !string.IsNullOrEmpty(board.SelfTeam))
+            var isSelf = team == board.SelfTeam;
+            var title = orderedTeams.Count == 1 ? "PLAYERS" : isSelf ? "YOUR TEAM" : "ENEMY TEAM";
+            var panel = new TeamPanelViewModel(title, players.Count, isSelf);
+            board.TeamStats.TryGetValue(team, out var stats);
+            panel.ApplyStats(stats);
+            foreach (var p in players)
             {
-                var isSelfTeam = p.Team == board.SelfTeam;
-                vm.TeamTag = isSelfTeam ? "Your team" : "Enemy team";
-                vm.TeamColor = isSelfTeam ? "#18E5A7" : "#FF4655";
+                var vm = new PlayerViewModel(p, _images)
+                {
+                    OpenProfile = OpenProfileFor,
+                    TeamTag = orderedTeams.Count == 1 ? "" : isSelf ? "Your team" : "Enemy team",
+                    TeamColor = isSelf ? "#18E5A7" : "#FF4655",
+                };
+                panel.Players.Add(vm);
             }
-            AllPlayers.Add(vm);
+            _ = panel.LoadIconAsync(_images,
+                orderedTeams.Count == 1 ? null : stats?.RankIcon);
+            TeamPanels.Add(panel);
         }
-        if (board.WinProb.HasValue && board.State == "INGAME")
-            ScoreLine = string.IsNullOrEmpty(ScoreLine)
-                ? $"Win {board.WinProb}%"
-                : $"{ScoreLine} · Win {board.WinProb}%";
         Raise(nameof(HasPlayers));
     }
 
-    private static string BuildScoreLine(BoardDto board)
+    private void OpenProfileFor(PlayerViewModel player)
     {
-        var parts = new List<string>();
-        if (!string.IsNullOrWhiteSpace(board.Map)) parts.Add(board.Map);
-        if (!string.IsNullOrWhiteSpace(board.Mode)) parts.Add(board.Mode);
-        if (board.Score is not null && board.State == "INGAME")
+        try
         {
-            var round = board.Score.Round.HasValue ? $" · Round {board.Score.Round}" : "";
-            parts.Add($"{board.Score.Ally} : {board.Score.Enemy}{round}");
+            var window = new ProfileWindow(_api, _images, player.Dto.Puuid, player.DisplayName)
+            {
+                Owner = Application.Current.MainWindow,
+            };
+            window.Show();
         }
-        if (board.LockProgress is not null && board.State == "PREGAME")
-            parts.Add($"{board.LockProgress.Locked}/{board.LockProgress.Total} locked");
-        return string.Join(" · ", parts);
+        catch { }
     }
 
     private async Task LoadSettingsAsync()

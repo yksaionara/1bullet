@@ -14,6 +14,7 @@
         <local:NullToCollapsedConverter x:Key="NullToCollapsed" />
         <local:StringEmptyToCollapsedConverter x:Key="StringEmptyToCollapsed" />
         <local:HexToBrushConverter x:Key="HexToBrush" />
+        <local:KdToBrushConverter x:Key="KdToBrush" />
         <local:BoolToCollapsedConverter x:Key="InvertBoolToCollapsed" Invert="True" />
         <BooleanToVisibilityConverter x:Key="BoolToVisible" />
 
