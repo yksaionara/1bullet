@@ -50,12 +50,14 @@ jobs:
             & gh @args
             if ($LASTEXITCODE -ne 0) { throw "gh $($args -join ' ') failed with exit $LASTEXITCODE" }
           }
-          $existing = gh release view $tag --json name 2>$null
-          if ($LASTEXITCODE -ne 0 -or -not $existing) { Invoke-Gh release create $tag --generate-notes --title $tag }
+          $existing = gh release view $tag --json isDraft 2>$null
+          if ($LASTEXITCODE -ne 0 -or -not $existing) { Invoke-Gh release create $tag --generate-notes --title $tag --draft=false }
           Invoke-Gh release upload $tag --clobber "dist/1bullet.exe" "dist/1 Bullet Setup.exe" "dist/1bullet-v$version.zip"
-          $bad = gh release view $tag --json assets -q '.assets[] | select(.name == "1.Bullet.Setup.exe") | .name' 2>$null
-          if ($bad) { Invoke-Gh release delete-asset $tag $bad --yes }
+          # NOTE: GitHub normalizes spaces in asset names to dots on upload,
+          # so the installer is listed as 1.Bullet.Setup.exe. The updater
+          # matches it with or without spaces.
+          Invoke-Gh release edit $tag --draft=false
           $names = (gh release view $tag --json assets -q '.assets[].name') -split "`r?`n" | Where-Object { $_ }
-          foreach ($need in @("1bullet.exe", "1 Bullet Setup.exe", "1bullet-v$version.zip")) {
+          foreach ($need in @("1bullet.exe", "1.Bullet.Setup.exe", "1bullet-v$version.zip")) {
             if ($names -notcontains $need) { throw "release is missing asset '$need' (have: $($names -join ', '))" }
           }

@@ -14,7 +14,7 @@ Made by Saif.
 
 ## Install and Update
 
-Download the latest `1 Bullet Setup.exe` from the [1bullet releases page](https://github.com/yksaionara/1bullet/releases). The installed application is `1bullet.exe`.
+Download the latest installer from the [1bullet releases page](https://github.com/yksaionara/1bullet/releases) — it is built as `1 Bullet Setup.exe` and listed there as `1.Bullet.Setup.exe` (GitHub shows dots instead of spaces). The installed application is `1bullet.exe`.
 
 Source ZIP releases are named `1bullet-v<version>.zip`. `start.bat` checks `yksaionara/1bullet` GitHub Releases before launch and applies a newer ZIP release transactionally. `UPDATE.bat` runs the same updater on demand.
 
