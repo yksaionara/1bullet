@@ -29,9 +29,11 @@ jobs:
       - name: Build source release
         shell: pwsh
         run: ./scripts/build-release.ps1 -Version (Get-Content VERSION -Raw).Trim() -Output dist -AllowDirty
-      - name: Build executable
+      - name: Build backend executable
         shell: pwsh
-        run: python -m PyInstaller --noconfirm --clean --distpath dist --workpath $env:TEMP\1bullet-build 1bullet.spec
+        run: python -m PyInstaller --noconfirm --clean --distpath dist --workpath $env:TEMP\1bullet-build 1bullet-backend.spec
+      - name: Build desktop app
+        run: dotnet publish wpf/OneBullet.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugSymbols=false -p:DebugType=None -o dist
       - name: Build installer
         shell: pwsh
         run: |

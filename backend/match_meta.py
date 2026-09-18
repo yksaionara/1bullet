@@ -7,7 +7,9 @@ import tempfile
 import threading
 import time
 
-_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+import scoutlog
+
+_DATA_DIR = scoutlog.backend_data_dir()
 _PATH = os.path.join(_DATA_DIR, "match_meta.json")
 _LOCK = threading.RLock()
 

@@ -17,16 +17,17 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 $AllowExact = @(
     ".gitattributes", ".gitignore", "LICENSE", "README.md", "VERSION",
     "runtime.json", "install.bat", "start.bat", "UPDATE.bat",
-    "run.py", "cli.py"
+    "run.py", "cli.py", "1bullet-backend.spec", "installer.iss"
 )
-$AllowPrefix = @("assets/", "backend/", "docs/", "scripts/")
+$AllowPrefix = @("assets/", "backend/", "docs/", "scripts/", "wpf/")
 
 
 $ForbiddenPatterns = @(
     '(^|/)\.env$', '\.env\.local', '(^|/)frontend/', '(^|/)node_modules/',
     '(^|/)__pycache__/', '\.pyc$', '(^|/)\.venv/', '(^|/)\.scout/',
     '(^|/)backend/data/', '(^|/)\.next/', '(^|/)\.git/', '(^|/)ops/',
-    '(^|/)vendor/', '(^|/)tests/', '(^|/)\.github/', '(^|/)\.claude/'
+    '(^|/)vendor/', '(^|/)tests/', '(^|/)\.github/', '(^|/)\.claude/',
+    '(^|/)wpf/(bin|obj|publish)/'
 )
 
 
@@ -113,7 +114,8 @@ try {
     Ok "Python, PowerShell and batch comments stripped; staged Python byte-compiles."
 
     Step "Scanning the staged tree for secrets, caches and developer paths ..."
-    $textExt = @(".py", ".ps1", ".bat", ".md", ".txt", ".json", ".example", ".gitignore", ".gitattributes")
+    $textExt = @(".py", ".ps1", ".bat", ".md", ".txt", ".json", ".example", ".gitignore", ".gitattributes",
+                    ".cs", ".xaml", ".csproj", ".sln", ".iss")
     foreach ($file in (Get-ChildItem -Path $stage -Recurse -File)) {
         $rel = $file.FullName.Substring($stage.Length + 1) -replace '\\', '/'
         foreach ($fp in $ForbiddenPatterns) {
@@ -164,7 +166,8 @@ try {
     [System.IO.Compression.ZipFile]::ExtractToDirectory($zipPath, $verifyDir)
     if ((Get-Content (Join-Path $verifyDir "VERSION") -Raw).Trim() -ne $Version) { Fail-Build "zip VERSION != $Version." }
     foreach ($req in @("run.py", "cli.py", "start.bat", "install.bat", "UPDATE.bat",
-                       "runtime.json", "backend\app.py", "backend\requirements.txt",
+                       "runtime.json", "1bullet-backend.spec", "installer.iss",
+                       "wpf\OneBullet.csproj", "backend\app.py", "backend\requirements.txt",
                        "scripts\common.ps1", "scripts\start.ps1", "scripts\update.ps1")) {
         if (-not (Test-Path (Join-Path $verifyDir $req))) { Fail-Build "zip missing required file: $req" }
     }

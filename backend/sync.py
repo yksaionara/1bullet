@@ -9,6 +9,7 @@ import uuid
 import requests
 
 import discord_presence
+import scoutlog
 from riot_client import LocalAuth, _self_presence_private
 from vconstants import APP_VERSION
 
@@ -42,7 +43,7 @@ def maybe_start() -> None:
 
 def _install_id() -> str:
     pass
-    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+    data_dir = scoutlog.backend_data_dir()
     path = os.path.join(data_dir, "client_id")
     try:
         with open(path) as f:

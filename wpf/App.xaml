@@ -1,0 +1,76 @@
+<Application x:Class="OneBullet.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:OneBullet">
+    <Application.Resources>
+        <SolidColorBrush x:Key="AccentBrush" Color="#FF4655" />
+        <SolidColorBrush x:Key="AccentDimBrush" Color="#40FF4655" />
+        <SolidColorBrush x:Key="BgBrush" Color="#0F1923" />
+        <SolidColorBrush x:Key="CardBrush" Color="#141F2A" />
+        <SolidColorBrush x:Key="LineBrush" Color="#2A3742" />
+        <SolidColorBrush x:Key="TextBrush" Color="#ECE8E1" />
+        <SolidColorBrush x:Key="DimBrush" Color="#9AA4AB" />
+
+        <local:NullToCollapsedConverter x:Key="NullToCollapsed" />
+        <local:StringEmptyToCollapsedConverter x:Key="StringEmptyToCollapsed" />
+        <local:HexToBrushConverter x:Key="HexToBrush" />
+        <local:BoolToCollapsedConverter x:Key="InvertBoolToCollapsed" Invert="True" />
+        <BooleanToVisibilityConverter x:Key="BoolToVisible" />
+
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{DynamicResource AccentBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="#132029" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+    </Application.Resources>
+</Application>

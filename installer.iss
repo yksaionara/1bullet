@@ -22,6 +22,7 @@ PrivilegesRequired=lowest
 
 [Files]
 Source: "dist\1bullet.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist\1bullet-backend.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\1 Bullet"; Filename: "{app}\1bullet.exe"

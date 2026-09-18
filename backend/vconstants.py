@@ -1,10 +1,20 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
+
+def _bundle_root() -> Path:
+    # Frozen (PyInstaller onefile) builds ship VERSION at the bundle root and
+    # must not rely on __file__, which does not map to a real layout there.
+    frozen = getattr(sys, "frozen", False)
+    meipass = getattr(sys, "_MEIPASS", "")
+    if frozen and meipass:
+        return Path(meipass)
+    return Path(__file__).resolve().parent.parent
 
 def _read_version() -> str:
     try:
-        v = (Path(__file__).resolve().parent.parent / "VERSION").read_text(
+        v = (_bundle_root() / "VERSION").read_text(
             encoding="utf-8").strip()
         return v or "1.1"
     except OSError:

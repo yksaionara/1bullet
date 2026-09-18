@@ -10,10 +10,11 @@ import threading
 import time
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+import scoutlog
 import valapi
 from vconstants import map_name_from_path, rank_from_tier
 
-_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+_DATA_DIR = scoutlog.backend_data_dir()
 _PATH = os.path.join(_DATA_DIR, "rr_history.json")
 _LOCK = threading.RLock()
 _MAX_POINTS = 2000

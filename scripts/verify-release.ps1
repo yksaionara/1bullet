@@ -29,12 +29,13 @@ try {
     $forbidden = @('(^|/)\.env$', '\.env\.local', '(^|/)frontend/', '(^|/)node_modules/',
                    '(^|/)__pycache__/', '\.pyc$', '(^|/)\.venv/', '(^|/)\.scout/',
                    '(^|/)backend/data/', '(^|/)\.next/', '(^|/)\.git/', '(^|/)ops/',
-                   '(^|/)vendor/', '(^|/)tests/', '(^|/)\.github/', '(^|/)\.claude/', 'client_id$')
+                   '(^|/)vendor/', '(^|/)tests/', '(^|/)\.github/', '(^|/)\.claude/', 'client_id$',
+                   '(^|/)wpf/(bin|obj|publish)/')
     $bad = @()
     foreach ($file in (Get-ChildItem -Path $tree -Recurse -File)) {
         $rel = $file.FullName.Substring($tree.Length + 1) -replace '\\', '/'
         foreach ($fp in $forbidden) { if ($rel -match $fp) { $bad += "$rel ($fp)" } }
-        if ($file.Extension -in @(".py", ".ps1", ".bat", ".md", ".json", ".txt", ".example")) {
+        if ($file.Extension -in @(".py", ".ps1", ".bat", ".md", ".json", ".txt", ".example", ".cs", ".xaml", ".csproj", ".sln", ".iss")) {
             $content = Get-Content $file.FullName -Raw -Encoding UTF8
             if ($content -match ('VS-CANARY' + '-SECRET')) { $bad += "$rel (canary secret leaked!)" }
             if ($content -match '[A-Za-z]:\\Users\\(?!Public)[A-Za-z0-9._ -]+\\') { $bad += "$rel (developer absolute path)" }
@@ -45,7 +46,9 @@ try {
 
     Step "Required files + encodings ..."
     foreach ($req in @("install.bat", "start.bat", "UPDATE.bat", "VERSION",
-                       "runtime.json", "run.py", "cli.py", "backend/requirements.txt",
+                       "runtime.json", "run.py", "cli.py", "1bullet-backend.spec",
+                       "installer.iss", "wpf/OneBullet.csproj",
+                       "backend/requirements.txt",
                        "backend/app.py", "scripts/common.ps1", "scripts/install.ps1",
                        "scripts/start.ps1", "scripts/update.ps1", "scripts/diagnose.ps1",
                        "scripts/import_smoke.py")) {

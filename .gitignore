@@ -30,6 +30,14 @@ frontend/.next/
 frontend/out/
 npm-debug.log*
 
+# .NET / WPF (native desktop frontend)
+wpf/bin/
+wpf/obj/
+wpf/publish/
+.vs/
+*.user
+*.suo
+
 # Reference clones (logic already integrated into backend/)
 vendor/
 

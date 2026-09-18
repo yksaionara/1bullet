@@ -10,8 +10,9 @@ import uuid
 
 import encounter_log
 import history
+import scoutlog
 
-_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+_DATA_DIR = scoutlog.backend_data_dir()
 _PATH = os.path.join(_DATA_DIR, "sessions.json")
 _LEGACY_PATH = os.path.join(_DATA_DIR, "session.json")
 _LOCK = threading.RLock()

@@ -2,12 +2,28 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 import re
 import time
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 SCOUT_DIR = Path(os.getenv("LOCALAPPDATA", Path.home() / "AppData" / "Local")) / "1Bullet"
+
+
+def backend_data_dir() -> str:
+    """Writable per-user data dir for ledger-style JSON stores.
+
+    Source mode keeps the historical ``backend/data`` folder untouched.
+    Frozen (PyInstaller onefile) builds cannot persist next to the bundle —
+    ``__file__``-relative paths resolve into a per-launch temp dir — so they
+    use %LOCALAPPDATA%\\1Bullet\\data instead.
+    """
+    if getattr(sys, "frozen", False):
+        root = SCOUT_DIR / "data"
+    else:
+        root = Path(__file__).resolve().parent / "data"
+    return str(root)
 
 MAX_BYTES = 2 * 1024 * 1024
 BACKUP_COUNT = 5
