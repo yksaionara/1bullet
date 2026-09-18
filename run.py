@@ -144,8 +144,11 @@ def maybe_offer_frozen_update() -> None:
         current = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
         if not latest or _version_key(latest) <= _version_key(current):
             return
+        def _norm(name: str) -> str:
+            return "".join(ch.lower() if ch.isalnum() else "" for ch in name)
+        want = _norm("1 Bullet Setup.exe")
         asset = next((item for item in release.get("assets") or []
-                      if item.get("name") == "1 Bullet Setup.exe"), None)
+                      if _norm(str(item.get("name") or "")) == want), None)
         url = (asset or {}).get("browser_download_url") or release.get("html_url")
         if not url:
             return
