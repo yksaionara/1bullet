@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.10"
+          architecture: x64
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install Python dependencies
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          python -m pip install --upgrade pip
+          python -m pip install -r backend/requirements.txt
+          python -m venv .venv
+          ./.venv/Scripts/python.exe -m pip install --upgrade pip
+          ./.venv/Scripts/python.exe -m pip install -r backend/requirements.txt
+
+      - name: Verify version and Python
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          ./scripts/verify-version.ps1
+          if ($LASTEXITCODE -ne 0) { throw "Version verification failed." }
+          python -m compileall -q backend run.py cli.py
+          if ($LASTEXITCODE -ne 0) { throw "Python compileall failed." }
+          ./.venv/Scripts/python.exe scripts/import_smoke.py
+          if ($LASTEXITCODE -ne 0) { throw "Python import smoke failed." }
+
+      - name: Build native desktop UI
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          dotnet restore wpf/OneBullet.csproj
+          dotnet build wpf/OneBullet.csproj -c Release --no-restore
+          if ($LASTEXITCODE -ne 0) { throw "WPF build failed." }
