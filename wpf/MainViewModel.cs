@@ -224,8 +224,8 @@ public sealed class MainViewModel : ObservableObject
         new[] { "#FF4655", "#18E5A7", "#9ADEFF", "#FFB454", "#D864C7", "#ECE8E1" };
 
     public string AppVersion { get; } =
-        Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-            ?.InformationalVersion ?? "0.0.0";
+        (Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion ?? "0.0.0").Split('+', 2)[0].Trim();
 
     public string VersionText => $"v{AppVersion}";
     public BackendManager Backend => _backend;
