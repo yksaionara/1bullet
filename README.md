@@ -1,12 +1,16 @@
 # 1 Bullet
 
+[![CI](https://github.com/yksaionara/1bullet/actions/workflows/ci.yml/badge.svg)](https://github.com/yksaionara/1bullet/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/yksaionara/1bullet)](https://github.com/yksaionara/1bullet/releases/latest)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
+
 Made by Saif.
 
 1 Bullet is a native Windows VALORANT companion. It reads Riot's local client interfaces on your PC to show live lobby and match information such as ranks, RR, parties, encounters, agents, player cards, and equipped weapon skins when that data is available.
 
 ## Download
 
-Use the latest release from the **Releases** page.
+Use the [latest release](https://github.com/yksaionara/1bullet/releases/latest).
 
 **Recommended:** install with `1.Bullet.Setup.exe`.
 
