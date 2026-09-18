@@ -31,7 +31,18 @@ from riot_client import REGIONS, LocalAuth, RiotClient, ClientNotReady
 from vconstants import APP_VERSION, STATES, rank_from_tier
 
 app = Flask(__name__)
-CORS(app)
+# Browser access is restricted to loopback origins. The native WPF client is
+# unaffected by CORS, and the optional local web frontend still works.
+CORS(
+    app,
+    origins=[
+        r"^http://127\.0\.0\.1(?::\d+)?$",
+        r"^http://localhost(?::\d+)?$",
+    ],
+    methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type"],
+    supports_credentials=False,
+)
 _COMMAND_ROUTER = None
 
 for _h in scoutlog.get_logger("backend").handlers:
