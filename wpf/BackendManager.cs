@@ -46,6 +46,14 @@ public sealed class BackendManager : ObservableObject, IDisposable
 
     public string LogPath => _logPath;
 
+    public void Fail(string message)
+    {
+        AppendLog($"[manager] {message}");
+        State = BackendState.Failed;
+        StatusText = message;
+        RefreshLogTail();
+    }
+
     public async Task<bool> StartAsync(IProgress<string>? progress = null, CancellationToken ct = default)
     {
         State = BackendState.Starting;

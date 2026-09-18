@@ -83,6 +83,12 @@ public sealed class PlayerViewModel : ObservableObject
         }
     }
 
+    private string _teamTag = "";
+    private string _teamColor = "#888888";
+
+    public string TeamTag { get => _teamTag; set => Set(ref _teamTag, value); }
+    public string TeamColor { get => _teamColor; set => Set(ref _teamColor, value); }
+
     public PlayerViewModel(PlayerDto dto, ImageCache images)
     {
         Dto = dto;
@@ -118,20 +124,7 @@ public sealed class PlayerViewModel : ObservableObject
     }
 }
 
-public sealed class TeamGroup : ObservableObject
-{
-    public string Title { get; }
-    public string Info { get; }
-    public bool IsSelfTeam { get; }
-    public ObservableCollection<PlayerViewModel> Players { get; } = new();
 
-    public TeamGroup(string title, string info, bool isSelfTeam)
-    {
-        Title = title;
-        Info = info;
-        IsSelfTeam = isSelfTeam;
-    }
-}
 
 public sealed class MainViewModel : ObservableObject
 {
@@ -160,7 +153,7 @@ public sealed class MainViewModel : ObservableObject
     private string? _updateUrl;
     private string _backendVersion = "";
 
-    public ObservableCollection<TeamGroup> Teams { get; } = new();
+    public ObservableCollection<PlayerViewModel> AllPlayers { get; } = new();
     public IReadOnlyList<string> AccentPresets { get; } =
         new[] { "#FF4655", "#18E5A7", "#9ADEFF", "#FFB454", "#D864C7", "#ECE8E1" };
 
@@ -176,7 +169,7 @@ public sealed class MainViewModel : ObservableObject
     public string NoticeText { get => _noticeText; set => Set(ref _noticeText, value); }
     public bool HasNotice { get => _hasNotice; set => Set(ref _hasNotice, value); }
     public string EmptyMessage { get => _emptyMessage; set => Set(ref _emptyMessage, value); }
-    public bool HasPlayers => Teams.Sum(t => t.Players.Count) > 0;
+    public bool HasPlayers => AllPlayers.Count > 0;
     public string AccentHex { get => _accentHex; set => Set(ref _accentHex, value); }
     public bool StartWithWindows { get => _startWithWindows; set => Set(ref _startWithWindows, value); }
     public bool HasBackground { get => _hasBackground; set => Set(ref _hasBackground, value); }
@@ -228,7 +221,22 @@ public sealed class MainViewModel : ObservableObject
         _started = true;
         ApplyAccent(AccentHex);
         var progress = new Progress<string>(s => BackendVersion = s);
-        if (!await _backend.StartAsync(progress).ConfigureAwait(true)) return;
+        try
+        {
+            if (!await _backend.StartAsync(progress).ConfigureAwait(true)) return;
+        }
+        catch (FileNotFoundException)
+        {
+            _backend.Fail("Backend component missing (1bullet-backend.exe). " +
+                "Install 1 Bullet using 1 Bullet Setup.exe and launch it from the Start Menu — " +
+                "the downloaded 1bullet.exe cannot run on its own.");
+            return;
+        }
+        catch (Exception ex)
+        {
+            _backend.Fail($"Couldn't start backend: {ex.Message}");
+            return;
+        }
         try
         {
             var health = await _api.GetHealthAsync().ConfigureAwait(true);
@@ -277,34 +285,25 @@ public sealed class MainViewModel : ObservableObject
             : !string.IsNullOrWhiteSpace(board.Error) ? board.Error
             : "Open VALORANT — lobby, Agent Select or a match.";
 
-        Teams.Clear();
-        if (board.Teams.Count > 0)
+        // Single grid in board order, mirroring the web dashboard. Team
+        // affiliation is shown as a tag on each card instead of sections.
+        AllPlayers.Clear();
+        var twoTeams = board.Teams.Count == 2;
+        foreach (var p in board.Players)
         {
-            var ordered = board.Teams.OrderByDescending(kv => kv.Key == board.SelfTeam).ToList();
-            foreach (var (team, players) in ordered)
+            var vm = new PlayerViewModel(p, _images);
+            if (twoTeams && !string.IsNullOrEmpty(board.SelfTeam))
             {
-                var isSelf = team == board.SelfTeam;
-                var title = board.Teams.Count == 1 ? "Players"
-                    : isSelf ? "Your team" : "Enemy team";
-                var info = "";
-                if (board.TeamStats.TryGetValue(team, out var stats)
-                    && !string.IsNullOrWhiteSpace(stats.AvgRank) && stats.AvgRank != "Unranked")
-                    info = $"Avg {stats.AvgRank}";
-                if (isSelf && board.WinProb.HasValue && board.State == "INGAME")
-                    info = string.IsNullOrEmpty(info) ? $"Win {board.WinProb}%" : $"{info} · Win {board.WinProb}%";
-                var group = new TeamGroup(title, info, isSelf);
-                foreach (var p in players)
-                    group.Players.Add(new PlayerViewModel(p, _images));
-                Teams.Add(group);
+                var isSelfTeam = p.Team == board.SelfTeam;
+                vm.TeamTag = isSelfTeam ? "Your team" : "Enemy team";
+                vm.TeamColor = isSelfTeam ? "#18E5A7" : "#FF4655";
             }
+            AllPlayers.Add(vm);
         }
-        else if (board.Players.Count > 0)
-        {
-            var group = new TeamGroup("Players", "", true);
-            foreach (var p in board.Players)
-                group.Players.Add(new PlayerViewModel(p, _images));
-            Teams.Add(group);
-        }
+        if (board.WinProb.HasValue && board.State == "INGAME")
+            ScoreLine = string.IsNullOrEmpty(ScoreLine)
+                ? $"Win {board.WinProb}%"
+                : $"{ScoreLine} · Win {board.WinProb}%";
         Raise(nameof(HasPlayers));
     }
 

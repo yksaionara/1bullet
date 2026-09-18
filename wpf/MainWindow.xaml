@@ -94,26 +94,19 @@
                                    Foreground="{StaticResource DimBrush}" FontSize="12" />
                     </StackPanel>
 
-                    <!-- Teams -->
-                    <ItemsControl ItemsSource="{Binding Teams}">
+                    <!-- Players: single wrapping grid in board order, like the web dashboard -->
+                    <ItemsControl ItemsSource="{Binding AllPlayers}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Margin="0,0,0,16">
-                                    <DockPanel Margin="0,0,0,8">
-                                        <TextBlock Text="{Binding Title}" FontSize="15"
-                                                   FontWeight="Bold"
-                                                   Foreground="{DynamicResource AccentBrush}" />
-                                        <TextBlock Text="{Binding Info}" DockPanel.Dock="Right"
-                                                   VerticalAlignment="Bottom"
-                                                   Foreground="{StaticResource DimBrush}" />
-                                    </DockPanel>
-                                    <ItemsControl ItemsSource="{Binding Players}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
                                                 <Border BorderBrush="{StaticResource LineBrush}"
                                                         BorderThickness="1" CornerRadius="8"
-                                                        Background="#141F2A" Padding="12" Margin="0,0,0,10"
-                                                        MaxWidth="860" HorizontalAlignment="Stretch">
+                                                        Background="#141F2A" Padding="12" Margin="0,0,12,12"
+                                                        Width="340">
                                                     <StackPanel>
                                                         <!-- Player card banner -->
                                                         <Image Source="{Binding CardBanner}" Height="52"
@@ -121,11 +114,15 @@
                                                                Visibility="{Binding CardBanner, Converter={StaticResource NullToCollapsed}}" />
                                                         <DockPanel>
                                                             <!-- Agent portrait -->
-                                                            <Grid Width="64" Height="64" Margin="0,0,12,0">
+                                                            <Grid Width="48" Height="48" Margin="0,0,10,0">
                                                                 <Border Background="#1C2A36" CornerRadius="6" />
                                                                 <Image Source="{Binding AgentPortrait}"
                                                                        Stretch="UniformToFill" />
                                                             </Grid>
+                                                            <TextBlock Text="{Binding TeamTag}" FontSize="11"
+                                                                       DockPanel.Dock="Right" VerticalAlignment="Top"
+                                                                       Foreground="{Binding TeamColor, Converter={StaticResource HexToBrush}}"
+                                                                       Visibility="{Binding TeamTag, Converter={StaticResource StringEmptyToCollapsed}}" />
                                                             <StackPanel>
                                                                 <StackPanel Orientation="Horizontal">
                                                                     <TextBlock Text="{Binding DisplayName}"
@@ -155,7 +152,7 @@
                                                                            Foreground="{Binding Dto.RankColor, Converter={StaticResource HexToBrush}}" />
                                                                 <TextBlock FontSize="12"
                                                                            Foreground="{StaticResource DimBrush}">
-                                                                    <Run Text="{Binding StatsLine}" /><Run Text="   " /><Run Text="{Binding PeakLine}" />
+                                                                    <Run Text="{Binding StatsLine, Mode=OneWay}" /><Run Text="   " /><Run Text="{Binding PeakLine, Mode=OneWay}" />
                                                                 </TextBlock>
                                                                 <TextBlock Text="{Binding EncounterText}" FontSize="12"
                                                                            Foreground="{StaticResource DimBrush}"
@@ -208,10 +205,6 @@
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
 
                     <!-- Settings -->
                     <GroupBox Header="Settings" Margin="0,6,0,10"
