@@ -235,6 +235,27 @@ def background_get():
     return send_file(path, conditional=True, max_age=3600)
 
 
+SHUTDOWN_EXIT_CODE = 42
+
+
+def _request_shutdown() -> int:
+    try:
+        scoutlog.SCOUT_DIR.mkdir(parents=True, exist_ok=True)
+        (scoutlog.SCOUT_DIR / "shutdown.requested").write_text(
+            str(os.getpid()), encoding="utf-8")
+    except OSError:
+        app.logger.warning("could not write shutdown marker")
+    return SHUTDOWN_EXIT_CODE
+
+
+@app.post("/api/shutdown")
+def shutdown_route():
+    # os._exit: the dev server handles requests on worker threads, where
+    # raising SystemExit would only kill the thread. _exit ends the process
+    # with the exact code run.py watches for (42 = user-requested quit).
+    os._exit(_request_shutdown())
+
+
 @app.delete("/api/settings/background")
 def background_reset():
     with _SETTINGS_LOCK:

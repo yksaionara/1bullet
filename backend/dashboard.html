@@ -54,6 +54,7 @@ input[type=color] { width: 48px; height: 32px; border: 0; background: none; padd
 </div>
 <div class="row">
 <label><input type="checkbox" id="startup"> Start 1 Bullet with Windows</label>
+<button id="quit" class="ghost">Quit 1 Bullet</button>
 </div>
 <div class="row"><small>Backgrounds stay on this PC and are never uploaded. Skin images are cached by your browser.</small></div>
 </div>
@@ -140,6 +141,11 @@ startupEl.onchange = async () => {
   const r = await fetch('/api/settings', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({startWithWindows: startupEl.checked})});
   if(!r.ok || !(await r.json()).ok){ alert('Could not update Windows startup.'); }
   loadSettings();
+};
+document.getElementById('quit').onclick = async () => {
+  if(!confirm('Quit 1 Bullet?')) return;
+  try{ await fetch('/api/shutdown', {method:'POST'}); }catch(e){}
+  document.body.innerHTML = '<div style="display:flex;height:100vh;align-items:center;justify-content:center;color:#9aa4ab;font-family:Segoe UI,Arial">1 Bullet stopped. You can close this window.</div>';
 };
 loadSettings(); loadBoard(); setInterval(loadBoard, 5000); setInterval(loadSettings, 30000);
 </script>

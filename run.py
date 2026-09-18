@@ -103,7 +103,7 @@ def die(code: str, msg: str) -> "NoReturn":
     sys.exit(1)
 
 def _fatal_dialog(message: str) -> None:
-    if not (IS_WIN and "--prod" in sys.argv):
+    if not (IS_WIN and ("--prod" in sys.argv or FROZEN)):
         return
     try:
         import ctypes
@@ -315,6 +315,17 @@ def clear_runtime_state() -> None:
         (SCOUT_DIR / "runtime-state.json").unlink(missing_ok=True)
     except OSError:
         pass
+
+def _shutdown_marker() -> Path:
+    base = os.environ.get("LOCALAPPDATA", "") or str(Path.home() / "AppData" / "Local")
+    return Path(base) / "1Bullet" / "shutdown.requested"
+
+def _consume_shutdown_marker() -> bool:
+    try:
+        _shutdown_marker().unlink()
+        return True
+    except OSError:
+        return False
 
 def _pid_exe(pid: int) -> str:
     try:
@@ -653,6 +664,7 @@ def main():
 
     py = resolve_python()
     validate_runtime(py)
+    _consume_shutdown_marker()
 
     procs = []
     roles = {}
@@ -751,7 +763,7 @@ def main():
                 die("VS-FRONTEND-001",
                     "The local frontend did not start. Run diagnostics.bat for details.")
 
-        say(f"Dashboard will open at {frontend_url}/dashboard", C_OK)
+        say(f"Dashboard will open in its own 1 Bullet window ({frontend_url}/dashboard)", C_OK)
 
         if not ATTACHED:
             print(f"\n{C_OK}Web app + terminal scoreboard running. Press Ctrl+C to stop.{C_END}\n")
@@ -763,6 +775,11 @@ def main():
                     continue
                 role = roles.get(p, "child")
                 if role == "backend":
+                    if p.returncode == 42 and _consume_shutdown_marker():
+                        LOG.info("shutdown requested from the dashboard; quitting")
+                        say("1 Bullet stopped.", C_DIM)
+                        stop = True
+                        break
                     if _CLOSING or (ATTACHED and p.returncode in (0xC000013A, -1073741510)):
                         LOG.info("backend exited with console-close status; shutting down")
                         stop = True

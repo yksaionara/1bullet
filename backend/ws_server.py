@@ -341,21 +341,70 @@ def start(*, board_provider, command_router, frontend_url: str, ws_port: int,
 
     return SESSION_TOKEN
 
+def _find_edge() -> str | None:
+    if os.name != "nt":
+        return None
+    candidates: list[str] = []
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                            r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe") as key:
+            candidates.append(winreg.QueryValueEx(key, "")[0])
+    except OSError:
+        pass
+    pf86 = os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")
+    pf64 = os.environ.get("ProgramFiles", r"C:\Program Files")
+    candidates += [
+        os.path.join(pf86, "Microsoft", "Edge", "Application", "msedge.exe"),
+        os.path.join(pf64, "Microsoft", "Edge", "Application", "msedge.exe"),
+    ]
+    for candidate in candidates:
+        if candidate and os.path.isfile(candidate):
+            return candidate
+    return None
+
+
+def _edge_app_cmd(url: str) -> list[str] | None:
+    edge = _find_edge()
+    if edge is None:
+        return None
+    profile = str(scoutlog.SCOUT_DIR / "edge-profile")
+    return [edge, f"--app={url}", f"--user-data-dir={profile}", "--no-first-run"]
+
+
+def _open_app_window(url: str) -> bool:
+    if os.getenv("ONEBULLET_NO_APP_WINDOW", "").strip().lower() in ("1", "true", "yes"):
+        return False
+    cmd = _edge_app_cmd(url)
+    if cmd is None:
+        return False
+    try:
+        import subprocess
+        subprocess.Popen(cmd, stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL,
+                         close_fds=True)
+        return True
+    except Exception as e:
+        LOG.warning("couldn't open the 1 Bullet app window (%s); trying the browser", e)
+        return False
+
+
 def _spawn_opener(frontend_url: str, url: str, backend_port: int | None) -> None:
     def _show_fallback() -> None:
         if os.name != "nt":
-            _log("couldn't open your browser automatically; restart after setting a default browser")
+            _log("couldn't open the 1 Bullet window automatically; restart after setting a default browser")
             return
         try:
             import ctypes
             ctypes.windll.user32.MessageBoxW(
                 None,
-                "1 Bullet couldn't open your default browser.\n\n"
-                "Copy this private one-time dashboard URL (Ctrl+C copies this dialog):\n\n"
+                "1 Bullet couldn't open its window.\n\n"
+                "Copy this private one-time dashboard URL into your browser "
+                "(Ctrl+C copies this dialog):\n\n"
                 + url,
                 "1 Bullet", 0x30)
         except Exception:
-            _log("couldn't open your browser automatically; set a default browser and restart")
+            _log("couldn't open the 1 Bullet window automatically; set a default browser and restart")
 
     def _wait(target: str, deadline: float) -> bool:
         while time.time() < deadline:
@@ -373,6 +422,9 @@ def _spawn_opener(frontend_url: str, url: str, backend_port: int | None) -> None
             LOG.warning("backend health not confirmed before opening dashboard")
         opened = _wait(frontend_url.rstrip("/") + "/", time.time() + 90)
         try:
+            if _open_app_window(url):
+                _log("opened the 1 Bullet app window")
+                return
             if not webbrowser.open(url):
                 raise RuntimeError("webbrowser.open returned False")
         except Exception:
