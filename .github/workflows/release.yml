@@ -24,6 +24,8 @@ jobs:
           if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$version") { throw "Tag must be v$version." }
       - name: Install build dependencies
         run: python -m pip install --upgrade pip PyInstaller; python -m pip install -r backend/requirements.txt
+      - name: Prepare build venv
+        run: python -m venv .venv
       - name: Build source release
         shell: pwsh
         run: ./scripts/build-release.ps1 -Version (Get-Content VERSION -Raw).Trim() -Output dist -AllowDirty
