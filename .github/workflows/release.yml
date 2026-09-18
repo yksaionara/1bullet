@@ -3,44 +3,119 @@ name: Release 1 Bullet
 on:
   push:
     tags: ["v*"]
-  workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: windows-latest
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.12.10"
           architecture: x64
-      - name: Validate version tag
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Validate release version
         shell: pwsh
         run: |
+          $ErrorActionPreference = "Stop"
           $version = (Get-Content VERSION -Raw).Trim()
-          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$version") { throw "Tag must be v$version." }
+          if ($env:GITHUB_REF_TYPE -ne "tag") { throw "Release workflow must run from a tag." }
+          if ($env:GITHUB_REF_NAME -ne "v$version") { throw "Tag must be v$version." }
+          ./scripts/verify-version.ps1
+          if ($LASTEXITCODE -ne 0) { throw "Version verification failed." }
       - name: Install build dependencies
-        run: python -m pip install --upgrade pip PyInstaller; python -m pip install -r backend/requirements.txt
-      - name: Prepare build venv
-        run: python -m venv .venv
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          python -m pip install --upgrade pip
+          python -m pip install PyInstaller
+          python -m pip install -r backend/requirements.txt
+          python -m venv .venv
+          ./.venv/Scripts/python.exe -m pip install --upgrade pip
+          ./.venv/Scripts/python.exe -m pip install -r backend/requirements.txt
+      - name: Python preflight
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          python -m compileall -q backend run.py cli.py
+          if ($LASTEXITCODE -ne 0) { throw "Python compileall failed." }
+          ./.venv/Scripts/python.exe scripts/import_smoke.py
+          if ($LASTEXITCODE -ne 0) { throw "Python import smoke failed." }
+      - name: WPF preflight
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          dotnet restore wpf/OneBullet.csproj
+          dotnet build wpf/OneBullet.csproj -c Release --no-restore
+          if ($LASTEXITCODE -ne 0) { throw "WPF build failed." }
       - name: Build source release
         shell: pwsh
-        run: ./scripts/build-release.ps1 -Version (Get-Content VERSION -Raw).Trim() -Output dist -AllowDirty
+        run: ./scripts/build-release.ps1 -Version (Get-Content VERSION -Raw).Trim() -Output dist
+      - name: Verify source release
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $version = (Get-Content VERSION -Raw).Trim()
+          ./scripts/verify-release.ps1 -Zip "dist/1bullet-v$version.zip"
+          if ($LASTEXITCODE -ne 0) { throw "Source release verification failed." }
       - name: Build backend executable
         shell: pwsh
         run: python -m PyInstaller --noconfirm --clean --distpath dist --workpath $env:TEMP\1bullet-build 1bullet-backend.spec
       - name: Build desktop app
-        run: dotnet publish wpf/OneBullet.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugSymbols=false -p:DebugType=None -o dist
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          dotnet publish wpf/OneBullet.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugSymbols=false -p:DebugType=None -p:IncludeSourceRevisionInInformationalVersion=false -o dist
+          if ($LASTEXITCODE -ne 0) { throw "Desktop publish failed." }
+      - name: Build portable package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $version = (Get-Content VERSION -Raw).Trim()
+          foreach ($file in @("dist/1bullet.exe", "dist/1bullet-backend.exe", "LICENSE", "NOTICE")) {
+            if (-not (Test-Path $file)) { throw "Portable package input missing: $file" }
+          }
+          Compress-Archive -Force -Path "dist/1bullet.exe","dist/1bullet-backend.exe","LICENSE","NOTICE" -DestinationPath "dist/1bullet-portable-v$version.zip"
       - name: Build installer
         shell: pwsh
         run: |
           choco install innosetup --no-progress --yes
           $version = (Get-Content VERSION -Raw).Trim()
           & iscc "/DONEBULLET_VERSION=$version" installer.iss
-      - name: Publish release
+      - name: Verify release outputs
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $version = (Get-Content VERSION -Raw).Trim()
+          $required = @("dist/1bullet.exe", "dist/1bullet-backend.exe", "dist/1 Bullet Setup.exe", "dist/1bullet-v$version.zip", "dist/1bullet-portable-v$version.zip")
+          foreach ($file in $required) {
+            if (-not (Test-Path $file)) { throw "Missing release output: $file" }
+            if ((Get-Item $file).Length -le 0) { throw "Release output is empty: $file" }
+          }
+          $info = [Diagnostics.FileVersionInfo]::GetVersionInfo((Resolve-Path "dist/1bullet.exe"))
+          if ($info.ProductVersion -and -not $info.ProductVersion.StartsWith($version)) { throw "1bullet.exe ProductVersion '$($info.ProductVersion)' does not match '$version'." }
+      - name: Generate SHA256 checksums
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $version = (Get-Content VERSION -Raw).Trim()
+          $files = @("dist/1 Bullet Setup.exe", "dist/1bullet-v$version.zip", "dist/1bullet-portable-v$version.zip")
+          $lines = foreach ($file in $files) {
+            $h = Get-FileHash -Algorithm SHA256 -Path $file
+            "$($h.Hash.ToLowerInvariant())  $([IO.Path]::GetFileName($file))"
+          }
+          Set-Content -Path "dist/SHA256SUMS.txt" -Value $lines -Encoding ascii
+      - name: Publish verified release
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -53,13 +128,15 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "gh $($args -join ' ') failed with exit $LASTEXITCODE" }
           }
           $existing = gh release view $tag --json isDraft 2>$null
-          if ($LASTEXITCODE -ne 0 -or -not $existing) { Invoke-Gh release create $tag --generate-notes --title $tag --draft=false }
-          Invoke-Gh release upload $tag --clobber "dist/1bullet.exe" "dist/1 Bullet Setup.exe" "dist/1bullet-v$version.zip"
-          # NOTE: GitHub normalizes spaces in asset names to dots on upload,
-          # so the installer is listed as 1.Bullet.Setup.exe. The updater
-          # matches it with or without spaces.
-          Invoke-Gh release edit $tag --draft=false
-          $names = (gh release view $tag --json assets -q '.assets[].name') -split "`r?`n" | Where-Object { $_ }
-          foreach ($need in @("1bullet.exe", "1.Bullet.Setup.exe", "1bullet-v$version.zip")) {
-            if ($names -notcontains $need) { throw "release is missing asset '$need' (have: $($names -join ', '))" }
+          if ($LASTEXITCODE -eq 0 -and $existing) {
+            $state = $existing | ConvertFrom-Json
+            if (-not $state.isDraft) { throw "Release $tag already exists and is published; refusing to overwrite it." }
+          } else {
+            Invoke-Gh release create $tag --generate-notes --title "1 Bullet $tag" --draft
           }
+          Invoke-Gh release upload $tag --clobber "dist/1 Bullet Setup.exe" "dist/1bullet-v$version.zip" "dist/1bullet-portable-v$version.zip" "dist/SHA256SUMS.txt"
+          $names = (gh release view $tag --json assets -q '.assets[].name') -split "\r?\n" | Where-Object { $_ }
+          foreach ($need in @("1.Bullet.Setup.exe", "1bullet-v$version.zip", "1bullet-portable-v$version.zip", "SHA256SUMS.txt")) {
+            if ($names -notcontains $need) { throw "Release is missing asset '$need' (have: $($names -join ', '))" }
+          }
+          Invoke-Gh release edit $tag --draft=false
