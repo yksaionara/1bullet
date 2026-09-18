@@ -1,4 +1,5 @@
 using System.Threading;
+using System.Diagnostics;
 using System.Windows;
 
 namespace OneBullet;
@@ -11,6 +12,10 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        // Keep the companion below the game when Windows schedules CPU time.
+        try { Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal; }
+        catch { }
 
         var created = false;
         _instanceMutex = new Mutex(false, @"Local\1BulletApp", out created);

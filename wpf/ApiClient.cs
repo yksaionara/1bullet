@@ -37,6 +37,100 @@ public sealed class ApiClient
         return await response.Content.ReadFromJsonAsync<BoardDto>(Json, ct).ConfigureAwait(false);
     }
 
+    public async Task<QueueDto?> GetQueueAsync(CancellationToken ct = default)
+    {
+        using var response = await _http.GetAsync($"{_baseUrl}/api/queue", ct).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode) return null;
+        return await response.Content.ReadFromJsonAsync<QueueDto>(Json, ct).ConfigureAwait(false);
+    }
+
+    public async Task<ActionResponseDto?> QueueActionAsync(
+        string action, string? queueId = null, CancellationToken ct = default)
+    {
+        var payload = new Dictionary<string, object?>
+        {
+            ["action"] = action,
+            ["dryRun"] = false,
+        };
+        if (!string.IsNullOrWhiteSpace(queueId)) payload["queueId"] = queueId;
+        using var response = await _http.PostAsJsonAsync($"{_baseUrl}/api/queue", payload, ct)
+            .ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<ActionResponseDto>(Json, ct).ConfigureAwait(false);
+    }
+
+    public async Task<AgentListDto?> GetAgentsAsync(CancellationToken ct = default)
+    {
+        using var response = await _http.GetAsync($"{_baseUrl}/api/agents", ct).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode) return null;
+        return await response.Content.ReadFromJsonAsync<AgentListDto>(Json, ct).ConfigureAwait(false);
+    }
+
+    public async Task<ActionResponseDto?> StartInstalockAsync(
+        string agent, string mode, double delay, CancellationToken ct = default)
+    {
+        using var response = await _http.PostAsJsonAsync($"{_baseUrl}/api/instalock/start",
+            new { agent, mode, delay, dryRun = false }, ct).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<ActionResponseDto>(Json, ct).ConfigureAwait(false);
+    }
+
+    public async Task<ActionResponseDto?> StopInstalockAsync(CancellationToken ct = default)
+    {
+        using var response = await _http.PostAsync(
+            $"{_baseUrl}/api/instalock/stop", content: null, ct).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<ActionResponseDto>(Json, ct).ConfigureAwait(false);
+    }
+
+    public async Task<ActionResponseDto?> GetInstalockStatusAsync(CancellationToken ct = default)
+    {
+        using var response = await _http.GetAsync(
+            $"{_baseUrl}/api/instalock/status", ct).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode) return null;
+        return await response.Content.ReadFromJsonAsync<ActionResponseDto>(Json, ct).ConfigureAwait(false);
+    }
+
+    public async Task<ActionResponseDto?> DodgeAsync(CancellationToken ct = default)
+    {
+        using var response = await _http.PostAsJsonAsync(
+            $"{_baseUrl}/api/dodge", new { dryRun = false }, ct).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<ActionResponseDto>(Json, ct).ConfigureAwait(false);
+    }
+
+    public async Task<OfflineStatusDto?> GetOfflineStatusAsync(CancellationToken ct = default)
+    {
+        using var response = await _http.GetAsync(
+            $"{_baseUrl}/api/offline-status", ct).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode) return null;
+        return await response.Content.ReadFromJsonAsync<OfflineStatusDto>(Json, ct).ConfigureAwait(false);
+    }
+
+    public async Task<ActionResponseDto?> SetOfflineStatusAsync(
+        string status, bool launch = false, CancellationToken ct = default)
+    {
+        var path = launch ? "/api/launch-offline" : "/api/offline-toggle";
+        using var launchClient = launch ? new HttpClient { Timeout = TimeSpan.FromSeconds(75) } : null;
+        var client = launchClient ?? _http;
+        using var response = await client.PostAsJsonAsync(
+            $"{_baseUrl}{path}", new { status }, ct).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<ActionResponseDto>(Json, ct).ConfigureAwait(false);
+    }
+
+    public async Task<PerformanceDto?> GetPerformanceAsync(
+        int richLimit = 20, CancellationToken ct = default)
+    {
+        using var response = await _http.GetAsync(
+            $"{_baseUrl}/api/performance?richLimit={richLimit}", ct).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode) return null;
+        return await response.Content.ReadFromJsonAsync<PerformanceDto>(Json, ct).ConfigureAwait(false);
+    }
+
+    public async Task<ActionResponseDto?> SessionActionAsync(
+        string action, CancellationToken ct = default)
+    {
+        using var response = await _http.PostAsJsonAsync(
+            $"{_baseUrl}/api/session/{action}", new { }, ct).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<ActionResponseDto>(Json, ct).ConfigureAwait(false);
+    }
+
     public async Task<SettingsDto?> GetSettingsAsync(CancellationToken ct = default)
     {
         using var response = await _http.GetAsync($"{_baseUrl}/api/settings", ct).ConfigureAwait(false);

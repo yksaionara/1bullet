@@ -101,6 +101,10 @@ public sealed class BackendManager : ObservableObject, IDisposable
         TruncateLogIfLarge();
         _process = Process.Start(psi)
             ?? throw new InvalidOperationException("Could not start the backend process.");
+        // The WPF parent is BelowNormal, but Riot processes launched through
+        // offline mode must inherit Normal priority from the backend.
+        try { _process.PriorityClass = ProcessPriorityClass.Normal; }
+        catch { }
         _process.EnableRaisingEvents = true;
         _process.Exited += (_, _) => AppendLog($"[manager] backend exited (code {_process?.ExitCode})");
         _process.OutputDataReceived += (_, e) => { if (e.Data is not null) AppendLog(e.Data); };

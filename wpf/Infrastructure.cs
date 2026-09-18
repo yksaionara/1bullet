@@ -69,6 +69,18 @@ public sealed class BoolToCollapsedConverter : IValueConverter
         throw new NotSupportedException();
 }
 
+public sealed class ZeroToVisibleConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        try { return System.Convert.ToInt32(value, culture) == 0 ? Visibility.Visible : Visibility.Collapsed; }
+        catch { return Visibility.Collapsed; }
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
 public sealed class StringEmptyToCollapsedConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>

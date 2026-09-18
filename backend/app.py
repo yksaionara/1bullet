@@ -497,8 +497,17 @@ def _performance_payload(timezone_name: str | None = None, rich_limit: int = 20)
     payload = _insights_payload(timezone_name)
     owner = (payload.get("account") or {}).get("puuid")
     if owner and _live_enabled():
+        backfill_before = (payload.get("backfill") or {}).get("updatedAt")
         def enrich_recent():
             try:
+                # History refresh is asynchronous. Wait for its backfill
+                # marker so enrichment sees newly discovered games.
+                for _ in range(60):
+                    current = history.payload(owner, timezone_name)
+                    backfill_after = (current.get("backfill") or {}).get("updatedAt")
+                    if backfill_after and backfill_after != backfill_before:
+                        break
+                    time.sleep(0.5)
                 history.enrich(live_match.LiveMatch(LocalAuth()), owner, rich_limit)
             except Exception:
                 app.logger.exception("performance enrichment failed")

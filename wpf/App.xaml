@@ -5,35 +5,51 @@
     <Application.Resources>
         <SolidColorBrush x:Key="AccentBrush" Color="#FF4655" />
         <SolidColorBrush x:Key="AccentDimBrush" Color="#40FF4655" />
-        <SolidColorBrush x:Key="BgBrush" Color="#0F1923" />
-        <SolidColorBrush x:Key="CardBrush" Color="#141F2A" />
-        <SolidColorBrush x:Key="LineBrush" Color="#2A3742" />
-        <SolidColorBrush x:Key="TextBrush" Color="#ECE8E1" />
-        <SolidColorBrush x:Key="DimBrush" Color="#9AA4AB" />
+        <SolidColorBrush x:Key="BgBrush" Color="#050506" />
+        <SolidColorBrush x:Key="CardBrush" Color="#0B0B0E" />
+        <SolidColorBrush x:Key="LineBrush" Color="#242429" />
+        <SolidColorBrush x:Key="TextBrush" Color="#F0F0F2" />
+        <SolidColorBrush x:Key="DimBrush" Color="#85858D" />
 
         <local:NullToCollapsedConverter x:Key="NullToCollapsed" />
         <local:StringEmptyToCollapsedConverter x:Key="StringEmptyToCollapsed" />
         <local:HexToBrushConverter x:Key="HexToBrush" />
         <local:KdToBrushConverter x:Key="KdToBrush" />
         <local:BoolToCollapsedConverter x:Key="InvertBoolToCollapsed" Invert="True" />
+        <local:ZeroToVisibleConverter x:Key="ZeroToVisible" />
         <BooleanToVisibilityConverter x:Key="BoolToVisible" />
 
         <Style TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
             <Setter Property="Foreground" Value="White" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="12,6" />
-            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="Margin" Value="0" />
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
-                                CornerRadius="6"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Opacity="{TemplateBinding Opacity}"
+                                CornerRadius="7"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.82" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.38" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -42,30 +58,112 @@
         <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{DynamicResource AccentBrush}"
-                                BorderThickness="1"
-                                CornerRadius="6"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center" />
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        </Style>
+
+        <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#101014" />
+            <Setter Property="Foreground" Value="#D7D7DB" />
+            <Setter Property="BorderBrush" Value="#34343C" />
+        </Style>
+
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#FF7A86" />
+            <Setter Property="BorderBrush" Value="#5A232B" />
+        </Style>
+
+        <Style x:Key="UtilityButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#0B0B0E" />
+            <Setter Property="Foreground" Value="#9A9AA1" />
+            <Setter Property="BorderBrush" Value="#2A2A30" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+
+        <Style x:Key="ChromeButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#09090B" />
+            <Setter Property="Foreground" Value="#9999A1" />
+            <Setter Property="BorderBrush" Value="#2A2A30" />
+            <Setter Property="Padding" Value="15,10" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+
+        <Style x:Key="QueueButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#898990" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Padding" Value="12,9" />
+            <Setter Property="FontSize" Value="11" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+                    <Setter Property="Foreground" Value="White" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsEligible}" Value="False">
+                    <Setter Property="Opacity" Value="0.35" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="FilterButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#08080A" />
+            <Setter Property="Foreground" Value="#85858D" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="FontSize" Value="10" />
         </Style>
 
         <Style TargetType="TextBox">
-            <Setter Property="Background" Value="#132029" />
+            <Setter Property="Background" Value="#0B0B0E" />
             <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="6,4" />
             <Setter Property="Margin" Value="0,0,8,0" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="Background" Value="#0B0B0E" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="Padding" Value="8,6" />
+        </Style>
+
+        <!-- Dark narrow scrollbar so modal panels never show the default white bar. -->
+        <Style TargetType="{x:Type ScrollBar}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Width" Value="10" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ScrollBar}">
+                        <Grid Background="Transparent">
+                            <Track Name="PART_Track" IsDirectionReversed="True">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" IsTabStop="False" Focusable="False" />
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="{x:Type Thumb}">
+                                                <Border Background="#2E2E35" CornerRadius="5" Margin="2,4,2,4" />
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" IsTabStop="False" Focusable="False" />
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ScrollViewer">
+            <Setter Property="PanningMode" Value="VerticalOnly" />
+            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
         </Style>
 
         <Style TargetType="CheckBox">

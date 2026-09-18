@@ -138,6 +138,132 @@ public sealed class BoardDto
     public string? Error { get; set; }
 }
 
+public sealed class QueueDto
+{
+    public bool Available { get; set; }
+    public string? Message { get; set; }
+    public string? QueueId { get; set; }
+    public string? QueueName { get; set; }
+    public string State { get; set; } = "";
+    public bool InQueue { get; set; }
+    public double? QueueElapsed { get; set; }
+    public int PartySize { get; set; }
+    public bool IsOwner { get; set; }
+    public bool AllReady { get; set; }
+    public List<QueueOptionDto> Eligible { get; set; } = new();
+}
+
+public sealed class QueueOptionDto
+{
+    public string Id { get; set; } = "";
+    public string Name { get; set; } = "";
+}
+
+public sealed class AgentListDto
+{
+    public List<AgentDto> Agents { get; set; } = new();
+}
+
+public sealed class AgentDto
+{
+    public string Name { get; set; } = "";
+    public string Uuid { get; set; } = "";
+    public string Role { get; set; } = "";
+    public string Color { get; set; } = "";
+    public string? Portrait { get; set; }
+}
+
+public sealed class ActionResponseDto
+{
+    public bool Ok { get; set; }
+    public string Message { get; set; } = "";
+    public string Status { get; set; } = "";
+    public string Agent { get; set; } = "";
+    public bool Running { get; set; }
+    public bool Enabled { get; set; }
+    public bool Connected { get; set; }
+    public QueueDto? Queue { get; set; }
+}
+
+public sealed class OfflineStatusDto
+{
+    public bool Running { get; set; }
+    public bool Active { get; set; }
+    public string Status { get; set; } = "online";
+    public bool Enabled { get; set; }
+    public bool Connected { get; set; }
+    public bool FriendsLoaded { get; set; }
+}
+
+public sealed class PerformanceDto
+{
+    public PerformanceAccountDto Account { get; set; } = new();
+    public List<PerformancePointDto> Points { get; set; } = new();
+    public PerformanceSummaryDto Summary { get; set; } = new();
+    public PerformanceSessionsDto Sessions { get; set; } = new();
+}
+
+public sealed class PerformanceAccountDto
+{
+    public string? Puuid { get; set; }
+    public string? RiotId { get; set; }
+}
+
+public sealed class PerformancePointDto
+{
+    public string MatchId { get; set; } = "";
+    public long? Ts { get; set; }
+    public string Map { get; set; } = "Unknown";
+    public string Mode { get; set; } = "Competitive";
+    public string Result { get; set; } = "";
+    public int? Delta { get; set; }
+    public int? Tier { get; set; }
+    public int? Rr { get; set; }
+    public string Agent { get; set; } = "";
+    public string? AgentPortrait { get; set; }
+    public int? Kills { get; set; }
+    public int? Deaths { get; set; }
+    public int? Assists { get; set; }
+    public double? Kd { get; set; }
+    public int? Acs { get; set; }
+    public double? HsPct { get; set; }
+    public string? SeasonId { get; set; }
+}
+
+public sealed class PerformanceSummaryDto
+{
+    public int Matches { get; set; }
+    public int Wins { get; set; }
+    public int Losses { get; set; }
+    public double? WinRate { get; set; }
+    public int Net { get; set; }
+    public double? AvgWin { get; set; }
+    public double? AvgLoss { get; set; }
+    public RankSnapshotDto Current { get; set; } = new();
+}
+
+public sealed class RankSnapshotDto
+{
+    public string Name { get; set; } = "Unranked";
+    public string Color { get; set; } = "#8A8A91";
+    public int? Rr { get; set; }
+    public int? Tier { get; set; }
+}
+
+public sealed class PerformanceSessionsDto
+{
+    public PerformanceSessionDto? Active { get; set; }
+    public List<PerformanceSessionDto> Archive { get; set; } = new();
+}
+
+public sealed class PerformanceSessionDto
+{
+    public string Id { get; set; } = "";
+    public long StartedAt { get; set; }
+    public long? EndedAt { get; set; }
+    public PerformanceSummaryDto Summary { get; set; } = new();
+}
+
 public sealed class SettingsDto
 {
     public string? AccentColor { get; set; }

@@ -23,6 +23,7 @@ _MIN_TOTAL = 20
 _MIN_BUCKET = 8
 _refresh_at: dict[str, float] = {}
 _enrich_at: dict[str, float] = {}
+_enrich_backfill: dict[str, int] = {}
 
 
 def _empty_store() -> dict:
@@ -240,11 +241,19 @@ def enrich(live_match, puuid: str, limit: int = 20) -> int:
         return 0
     now = time.time()
     with _LOCK:
-        if now - _enrich_at.get(puuid, 0) < _REFRESH_TTL:
-            account = _ensure_account(puuid)
-            return sum(p.get("acs") is not None for p in account.get("points", [])[-limit:])
-        _enrich_at[puuid] = now
         account = _ensure_account(puuid)
+        backfill_at = int(account.get("lastBackfillAt") or 0)
+        last_enrich = _enrich_at.get(puuid, 0)
+        if now - last_enrich < _REFRESH_TTL:
+            # If history backfill advanced since the last enrich, new games
+            # need enrichment despite the TTL; otherwise return cached count.
+            if backfill_at <= _enrich_backfill.get(puuid, 0):
+                return sum(p.get("acs") is not None for p in account.get("points", [])[-limit:])
+        _enrich_at[puuid] = now
+        _enrich_backfill[puuid] = backfill_at
+        if not account.get("points"):
+            _enrich_at.pop(puuid, None)
+            return 0
         candidates = [p for p in account.get("points", [])[-limit:]
                       if p.get("matchId") and (p.get("acs") is None
                                                or p.get("scores") is None

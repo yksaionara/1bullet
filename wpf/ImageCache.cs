@@ -15,6 +15,8 @@ public sealed class ImageCache
 {
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(15) };
     private readonly ConcurrentDictionary<string, ImageSource?> _memory = new();
+    private readonly ConcurrentDictionary<string, Lazy<Task<ImageSource?>>> _pending = new();
+    private readonly ConcurrentQueue<string> _memoryOrder = new();
     private readonly string _dir;
 
     public ImageCache()
@@ -31,6 +33,19 @@ public sealed class ImageCache
         if (string.IsNullOrWhiteSpace(url)) return null;
         if (_memory.TryGetValue(url, out var cached)) return cached;
 
+        var pending = _pending.GetOrAdd(url, key =>
+            new Lazy<Task<ImageSource?>>(() => LoadAsync(key),
+                LazyThreadSafetyMode.ExecutionAndPublication));
+        try { return await pending.Value.ConfigureAwait(false); }
+        finally
+        {
+            ((ICollection<KeyValuePair<string, Lazy<Task<ImageSource?>>>>)_pending)
+                .Remove(new KeyValuePair<string, Lazy<Task<ImageSource?>>>(url, pending));
+        }
+    }
+
+    private async Task<ImageSource?> LoadAsync(string url)
+    {
         try
         {
             var path = PathFor(url);
@@ -50,6 +65,9 @@ public sealed class ImageCache
             }
             var image = Decode(bytes);
             _memory[url] = image;
+            _memoryOrder.Enqueue(url);
+            while (_memory.Count > 192 && _memoryOrder.TryDequeue(out var oldest))
+                _memory.TryRemove(oldest, out _);
             return image;
         }
         catch
