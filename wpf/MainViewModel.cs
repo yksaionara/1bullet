@@ -49,10 +49,9 @@ public sealed class PlayerViewModel : ObservableObject
     public ImageSource? Splash { get => _splash; set => Set(ref _splash, value); }
 
     public string DisplayName => string.IsNullOrWhiteSpace(Dto.Name) ? "Player" : Dto.Name;
-    public string HiddenTag => Dto.NameHidden ? "  (hidden)" : "";
     public string TitleLine => string.IsNullOrWhiteSpace(Dto.Title) ? "" : $"“{Dto.Title}”";
     public string RankName => string.IsNullOrWhiteSpace(Dto.Rank) ? "Unranked" : Dto.Rank;
-    public string RrText => $"{Dto.Rr}RR";
+    public string RrText => $"{Dto.Rr} RR";
     public string RrDeltaText => !Dto.RrEarned.HasValue || Dto.RrEarned.Value == 0 ? ""
         : Dto.RrEarned.Value > 0 ? $"+{Dto.RrEarned.Value}" : $"{Dto.RrEarned.Value}";
     public string RrDeltaColor => !Dto.RrEarned.HasValue || Dto.RrEarned.Value == 0 ? "#9AA4AB"
@@ -104,15 +103,46 @@ public sealed class PlayerViewModel : ObservableObject
         return new SkinViewModel(weapon, string.IsNullOrWhiteSpace(skin?.Name) ? "—" : skin!.Name);
     }
 
+    // Main-card artwork only: agent portrait, rank icons, Vandal + Phantom.
+    // Splashes, banners and other weapon slots stay out of the hot refresh path.
+    // ImageCache deduplicates concurrent requests, so unchanged URLs cost nothing.
     private async Task LoadImagesAsync()
     {
         try
         {
+            AgentPortrait = await _images.GetAsync(Dto.AgentPortrait).ConfigureAwait(true);
             RankIcon = await _images.GetAsync(Dto.RankIcon).ConfigureAwait(true);
             PeakIcon = await _images.GetAsync(Dto.PeakIcon).ConfigureAwait(true);
+            Vandal.Icon = await _images.GetAsync(
+                Dto.Weapons.FirstOrDefault(w =>
+                    string.Equals(w.Weapon, "Vandal", StringComparison.OrdinalIgnoreCase))?.Skin?.Icon)
+                .ConfigureAwait(true);
+            Phantom.Icon = await _images.GetAsync(
+                Dto.Weapons.FirstOrDefault(w =>
+                    string.Equals(w.Weapon, "Phantom", StringComparison.OrdinalIgnoreCase))?.Skin?.Icon)
+                .ConfigureAwait(true);
         }
         catch { }
     }
+}
+
+public sealed class InstalockAgentViewModel : ObservableObject
+{
+    private ImageSource? _portrait;
+    private bool _isSelected;
+
+    public InstalockAgentViewModel(AgentDto agent)
+    {
+        Name = agent.Name;
+        Role = agent.Role;
+        PortraitUrl = agent.Portrait;
+    }
+
+    public string Name { get; }
+    public string Role { get; }
+    public string? PortraitUrl { get; }
+    public ImageSource? Portrait { get => _portrait; set => Set(ref _portrait, value); }
+    public bool IsSelected { get => _isSelected; set => Set(ref _isSelected, value); }
 }
 
 
@@ -227,13 +257,14 @@ public sealed class TeamPanelViewModel : ObservableObject
     public int Count { get; }
     public bool IsSelfTeam { get; }
     public ObservableCollection<PlayerViewModel> Players { get; } = new();
+    public string Subtitle { get; set; } = "";
 
     public string AvgRank { get; private set; } = "";
-    public string AvgRankColor { get; private set; } = "#9AA4AB";
+    public string AvgRankColor { get; private set; } = "#8C8C94";
     public string AvgKd { get; private set; } = "—";
     public string AvgWr { get; private set; } = "—";
     public string Smurfs { get; private set; } = "0";
-    public string SmurfColor { get; private set; } = "#9AA4AB";
+    public string SmurfColor { get; private set; } = "#8C8C94";
     public bool HasAverages { get; private set; }
     public ImageSource? AvgRankIcon { get => _avgRankIcon; set => Set(ref _avgRankIcon, value); }
 
@@ -303,40 +334,46 @@ public sealed class MainViewModel : ObservableObject
     private int _requestCount;
     private bool _autoRefresh = true;
     private string _activePanel = "";
-    private string _queueStatusText = "Not connected";
+    private string _queueStatusText = "No lobby";
     private string _queueHint = "Open VALORANT to enable matchmaking controls.";
     private string _queueActionText = "Start Queue";
     private string _clientBadgeText = "Starting…";
-    private string _clientBadgeColor = "#85858D";
+    private string _clientBadgeColor = "#8C8C94";
     private bool _hasMatchContext;
     private bool _canControlQueue;
     private bool _isInQueue;
     private bool _offlineEnabled;
     private bool _offlineRunning;
-    private string _offlineButtonText = "Riot Presence";
+    private string _offlineButtonText = "Presence";
     private string _controlMessage = "";
+    private string _matchActionMessage = "";
     private string _selectedAgent = "Jett";
     private string _instalockMode = "lock";
-    private double _instalockDelay;
+    private double _instalockDelay = 2;
     private bool _instalockRunning;
     private string _instalockStatus = "Choose an agent and arm instalock.";
+    private string _instalockButtonText = "Instalock";
+    private string _updateStatusText = "";
+    private bool _hasParties;
+    private bool _hasSessions;
+    private DateTime _lastBoardAt = DateTime.MinValue;
+    private ImageSource? _currentRankIcon;
     private string _performanceTab = "Overview";
     private string _performanceScope = "Act";
     private string _chartMode = "RR change";
     private int _matchLimit = 20;
     private string _performanceAccount = "Competitive history";
     private string _performanceEmptyText = "Play a competitive match to begin tracking rank progress.";
-    private string _matchActionMessage = "";
-    private string _netRrText = "0";
-    private string _recordText = "0 - 0";
+    private string _netRrText = "—";
+    private string _recordText = "No matches yet";
     private string _currentRankText = "Unranked";
-    private string _currentRrText = "-- RR";
+    private string _currentRrText = "";
     private readonly List<PerformancePointDto> _performancePoints = new();
 
     public ObservableCollection<TeamPanelViewModel> TeamPanels { get; } = new();
     public ObservableCollection<PartyPillViewModel> PartyPills { get; } = new();
     public ObservableCollection<QueueOptionViewModel> QueueOptions { get; } = new();
-    public ObservableCollection<string> Agents { get; } = new();
+    public ObservableCollection<InstalockAgentViewModel> Agents { get; } = new();
     public ObservableCollection<PerformancePointViewModel> PerformanceMatches { get; } = new();
     public ObservableCollection<SessionViewModel> PerformanceSessions { get; } = new();
     public IReadOnlyList<string> AccentPresets { get; } =
@@ -394,7 +431,7 @@ public sealed class MainViewModel : ObservableObject
     public string UpdateText { get => _updateText; set => Set(ref _updateText, value); }
     public string BackendVersion { get => _backendVersion; set => Set(ref _backendVersion, value); }
     public bool AutoRefresh { get => _autoRefresh; set => Set(ref _autoRefresh, value); }
-    public string AutoRefreshText => AutoRefresh ? "Live updates: On" : "Live updates: Off";
+    public string AutoRefreshText => AutoRefresh ? "● Live" : "○ Paused";
     public string LastUpdatedText { get; private set; } = "Waiting for VALORANT";
     public string RequestText => $"Updates: {_requestCount}";
     public string MatchActionMessage { get => _matchActionMessage; set => Set(ref _matchActionMessage, value); }
@@ -430,12 +467,36 @@ public sealed class MainViewModel : ObservableObject
     public bool IsInQueue { get => _isInQueue; set => Set(ref _isInQueue, value); }
     public bool OfflineEnabled { get => _offlineEnabled; set => Set(ref _offlineEnabled, value); }
     public string OfflineButtonText { get => _offlineButtonText; set => Set(ref _offlineButtonText, value); }
+    public string InstalockButtonText { get => _instalockButtonText; set => Set(ref _instalockButtonText, value); }
+    public string UpdateStatusText { get => _updateStatusText; set => Set(ref _updateStatusText, value); }
+    public bool HasUpdateStatus => !string.IsNullOrWhiteSpace(UpdateStatusText);
+    public bool HasParties { get => _hasParties; set => Set(ref _hasParties, value); }
+    public bool HasSessions { get => _hasSessions; set => Set(ref _hasSessions, value); }
+    public ImageSource? CurrentRankIcon { get => _currentRankIcon; set => Set(ref _currentRankIcon, value); }
+    public bool HasBackendFailure => Backend.State == BackendManager.BackendState.Failed;
     public string ControlMessage { get => _controlMessage; set => Set(ref _controlMessage, value); }
-    public string SelectedAgent { get => _selectedAgent; set => Set(ref _selectedAgent, value); }
+    public string SelectedAgent
+    {
+        get => _selectedAgent;
+        set
+        {
+            if (!Set(ref _selectedAgent, value)) return;
+            foreach (var agent in Agents) agent.IsSelected = agent.Name == value;
+            SyncInstalockButton();
+        }
+    }
     public string InstalockMode { get => _instalockMode; set => Set(ref _instalockMode, value); }
     public double InstalockDelay { get => _instalockDelay; set => Set(ref _instalockDelay, value); }
-    public bool InstalockRunning { get => _instalockRunning; set => Set(ref _instalockRunning, value); }
+    public bool InstalockRunning
+    {
+        get => _instalockRunning;
+        set
+        {
+            if (Set(ref _instalockRunning, value)) Raise(nameof(InstalockPrimaryText));
+        }
+    }
     public string InstalockStatus { get => _instalockStatus; set => Set(ref _instalockStatus, value); }
+    public string InstalockPrimaryText => InstalockRunning ? "STOP AUTO-LOCK" : "START AUTO-LOCK";
     public string PerformanceTab
     {
         get => _performanceTab;
@@ -486,11 +547,15 @@ public sealed class MainViewModel : ObservableObject
     public RelayCommand DodgeCommand { get; }
     public RelayCommand StartInstalockCommand { get; }
     public RelayCommand StopInstalockCommand { get; }
+    public RelayCommand ToggleInstalockCommand { get; }
+    public RelayCommand SelectInstalockAgentCommand { get; }
+    public RelayCommand SetInstalockModeCommand { get; }
     public RelayCommand SelectPerformanceTabCommand { get; }
     public RelayCommand SetMatchLimitCommand { get; }
     public RelayCommand SetPerformanceScopeCommand { get; }
     public RelayCommand SetChartModeCommand { get; }
     public RelayCommand SessionActionCommand { get; }
+    public RelayCommand OpenLinkCommand { get; }
 
     public MainViewModel(ApiClient api, BackendManager backend, ImageCache images)
     {
@@ -500,7 +565,11 @@ public sealed class MainViewModel : ObservableObject
         _backend.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName is nameof(BackendManager.StatusText)
-                or nameof(BackendManager.State)) Raise(nameof(Backend));
+                or nameof(BackendManager.State))
+            {
+                Raise(nameof(Backend));
+                Raise(nameof(HasBackendFailure));
+            }
         };
 
         SaveAccentCommand = new RelayCommand(_ => _ = SaveAccentAsync(AccentHex));
@@ -518,6 +587,7 @@ public sealed class MainViewModel : ObservableObject
             var name = p as string ?? "";
             if (name == "Controls") name = "Settings";
             ActivePanel = name;
+            if (name == "Instalock") _ = LoadAgentsAsync();
         });
         ClosePanelCommand = new RelayCommand(_ => ActivePanel = "");
         RefreshCommand = new RelayCommand(_ => _ = RefreshAllAsync(forcePerformance: true));
@@ -540,6 +610,15 @@ public sealed class MainViewModel : ObservableObject
         DodgeCommand = new RelayCommand(_ => _ = DodgeAsync());
         StartInstalockCommand = new RelayCommand(_ => _ = StartInstalockAsync());
         StopInstalockCommand = new RelayCommand(_ => _ = StopInstalockAsync());
+        ToggleInstalockCommand = new RelayCommand(_ => _ = ToggleInstalockAsync());
+        SelectInstalockAgentCommand = new RelayCommand(p =>
+        {
+            if (p is InstalockAgentViewModel agent) SelectedAgent = agent.Name;
+        });
+        SetInstalockModeCommand = new RelayCommand(p =>
+        {
+            if (p is string mode && mode is "lock" or "select") InstalockMode = mode;
+        });
         SelectPerformanceTabCommand = new RelayCommand(p => PerformanceTab = p as string ?? "Overview");
         SetMatchLimitCommand = new RelayCommand(p =>
         {
@@ -550,6 +629,12 @@ public sealed class MainViewModel : ObservableObject
         SessionActionCommand = new RelayCommand(p =>
         {
             if (p is string action) _ = RunSessionActionAsync(action);
+        });
+        OpenLinkCommand = new RelayCommand(p =>
+        {
+            if (p is not string url || string.IsNullOrWhiteSpace(url)) return;
+            try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
+            catch { }
         });
 
         foreach (var (id, name) in new[]
@@ -565,6 +650,7 @@ public sealed class MainViewModel : ObservableObject
         _boardTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
         _boardTimer.Tick += async (_, _) =>
         {
+            UpdateFreshnessText();
             if (AutoRefresh) await RefreshAllAsync().ConfigureAwait(false);
         };
     }
@@ -666,8 +752,7 @@ public sealed class MainViewModel : ObservableObject
                 MatchStateText = "RECONNECTING…";
                 ClientBadgeText = "Reconnecting…";
                 ClientBadgeColor = "#FFB454";
-                LastUpdatedText = "Connection lost — retrying";
-                Raise(nameof(LastUpdatedText));
+                UpdateFreshnessText();
             }
             return;
         }
@@ -676,6 +761,7 @@ public sealed class MainViewModel : ObservableObject
         _gameState = board.State;
         if (returnedToMenus) _lastPerformanceRefresh = DateTime.MinValue;
         _requestCount++;
+        _lastBoardAt = DateTime.UtcNow;
         LastUpdatedText = "Updated just now";
         Raise(nameof(LastUpdatedText));
         Raise(nameof(RequestText));
@@ -684,11 +770,16 @@ public sealed class MainViewModel : ObservableObject
         {
             "INGAME" => ($"● LIVE · {stateLabel.ToUpperInvariant()}", "#FF4655"),
             "PREGAME" => ($"◆ {stateLabel.ToUpperInvariant()}", "#FFB454"),
-            "MENUS" => ($"◆ {stateLabel.ToUpperInvariant()}", "#18E5A7"),
-            _ => (stateLabel.ToUpperInvariant(), "#888888"),
+            "MENUS" => ($"◆ {stateLabel.ToUpperInvariant()}", "#36D399"),
+            _ => (stateLabel.ToUpperInvariant(), "#8C8C94"),
         };
-        ClientBadgeText = board.State == "OFFLINE" ? "VALORANT closed" : "VALORANT connected";
-        ClientBadgeColor = board.State == "OFFLINE" ? "#85858D" : "#FF4655";
+        (ClientBadgeText, ClientBadgeColor) = board.State switch
+        {
+            "INGAME" => ("In Match", "#36D399"),
+            "PREGAME" => ("Agent Select", "#FFB454"),
+            "MENUS" => ("VALORANT connected", "#36D399"),
+            _ => ("VALORANT closed", "#8C8C94"),
+        };
         HasMatchContext = board.State is "INGAME" or "PREGAME";
         MapName = (board.Map ?? "").ToUpperInvariant();
         ModeName = (board.Mode ?? "").ToUpperInvariant();
@@ -715,9 +806,10 @@ public sealed class MainViewModel : ObservableObject
         if (partyFingerprint != _partyFingerprint)
         {
             _partyFingerprint = partyFingerprint;
-            PartyPills.Clear();
-            foreach (var party in board.Parties.OrderBy(p => p.Number))
-                PartyPills.Add(new PartyPillViewModel(party));
+        PartyPills.Clear();
+        foreach (var party in board.Parties.OrderBy(p => p.Number))
+            PartyPills.Add(new PartyPillViewModel(party));
+        HasParties = PartyPills.Count > 0;
         }
 
         var orderedTeams = board.Teams.OrderByDescending(kv => kv.Key == board.SelfTeam).ToList();
@@ -732,9 +824,20 @@ public sealed class MainViewModel : ObservableObject
         {
             var isSelf = team == board.SelfTeam;
             var title = orderedTeams.Count == 1
-                ? board.State == "MENUS" ? "YOUR LOBBY" : "PLAYERS"
+                ? board.State switch
+                {
+                    "MENUS" => "YOUR LOBBY",
+                    "PREGAME" => "AGENT SELECT",
+                    "INGAME" => "LIVE MATCH",
+                    _ => "PLAYERS",
+                }
                 : isSelf ? "YOUR TEAM" : "ENEMY TEAM";
-            var panel = new TeamPanelViewModel(title, players.Count, isSelf);
+            var panel = new TeamPanelViewModel(title, players.Count, isSelf)
+            {
+                Subtitle = orderedTeams.Count == 1
+                    ? LobbySubtitle(players.Count, board.Parties.Count)
+                    : $"{players.Count} players",
+            };
             board.TeamStats.TryGetValue(team, out var stats);
             panel.ApplyStats(stats);
             foreach (var p in players)
@@ -747,11 +850,37 @@ public sealed class MainViewModel : ObservableObject
                 };
                 panel.Players.Add(vm);
             }
-            _ = panel.LoadIconAsync(_images,
-                orderedTeams.Count == 1 ? null : stats?.RankIcon);
+            _ = panel.LoadIconAsync(_images, stats?.RankIcon);
             TeamPanels.Add(panel);
         }
         Raise(nameof(HasPlayers));
+    }
+
+    private static string LobbySubtitle(int players, int parties)
+    {
+        if (players <= 1) return "1 player · Solo";
+        if (parties <= 0) return $"{players} players";
+        return $"{players} players · {parties} part{(parties == 1 ? "y" : "ies")}";
+    }
+
+    private void UpdateFreshnessText()
+    {
+        if (_boardFailures > 0)
+        {
+            LastUpdatedText = "Reconnecting…";
+        }
+        else if (_lastBoardAt == DateTime.MinValue)
+        {
+            LastUpdatedText = "Waiting for VALORANT";
+        }
+        else
+        {
+            var age = DateTime.UtcNow - _lastBoardAt;
+            LastUpdatedText = age < TimeSpan.FromSeconds(10) ? "Updated just now"
+                : age < TimeSpan.FromMinutes(1) ? $"Updated {(int)age.TotalSeconds}s ago"
+                : $"Updated {(int)age.TotalMinutes}m ago";
+        }
+        Raise(nameof(LastUpdatedText));
     }
 
     private static string RosterFingerprint(
@@ -782,7 +911,7 @@ public sealed class MainViewModel : ObservableObject
             var queue = await _api.GetQueueAsync().ConfigureAwait(true);
             if (queue is null || !queue.Available)
             {
-                QueueStatusText = "Client not ready";
+                QueueStatusText = _gameState == "OFFLINE" ? "No lobby" : "Waiting for lobby";
                 QueueHint = queue?.Message ?? "Open VALORANT to enable matchmaking controls.";
                 CanControlQueue = false;
                 return;
@@ -791,7 +920,7 @@ public sealed class MainViewModel : ObservableObject
         }
         catch
         {
-            QueueStatusText = "Client not ready";
+            QueueStatusText = _gameState == "OFFLINE" ? "No lobby" : "Waiting for lobby";
             CanControlQueue = false;
         }
     }
@@ -809,6 +938,7 @@ public sealed class MainViewModel : ObservableObject
         IsInQueue = queue.InQueue;
         QueueActionText = queue.InQueue ? "Stop Queue" : "Start Queue";
         QueueStatusText = queue.InQueue ? "In queue" : "In lobby";
+        if (_gameState is "INGAME" or "PREGAME") QueueStatusText = "In match";
         QueueHint = !string.IsNullOrWhiteSpace(responseMessage) ? responseMessage
             : !queue.IsOwner ? "Party owner controls the queue"
             : !queue.AllReady ? "Waiting for every party member to be ready"
@@ -870,8 +1000,8 @@ public sealed class MainViewModel : ObservableObject
             _offlineRunning = status.Running;
             OfflineEnabled = status.Enabled;
             OfflineButtonText = status.Enabled && !string.IsNullOrWhiteSpace(status.Status)
-                ? $"Riot Presence: {char.ToUpperInvariant(status.Status[0]) + status.Status[1..].ToLowerInvariant()}"
-                : "Riot Presence";
+                ? $"Presence: {char.ToUpperInvariant(status.Status[0]) + status.Status[1..].ToLowerInvariant()}"
+                : "Presence";
         }
         catch { }
     }
@@ -896,9 +1026,21 @@ public sealed class MainViewModel : ObservableObject
             var result = await _api.GetAgentsAsync().ConfigureAwait(true);
             if (result is null) return;
             Agents.Clear();
-            foreach (var agent in result.Agents.OrderBy(a => a.Name)) Agents.Add(agent.Name);
-            if (!Agents.Contains(SelectedAgent) && Agents.Count > 0) SelectedAgent = Agents[0];
+            foreach (var agent in result.Agents.OrderBy(a => a.Role).ThenBy(a => a.Name))
+            {
+                var vm = new InstalockAgentViewModel(agent) { IsSelected = agent.Name == SelectedAgent };
+                Agents.Add(vm);
+                _ = LoadInstalockAgentArtAsync(vm);
+            }
+            if (!Agents.Any(agent => agent.Name == SelectedAgent) && Agents.Count > 0)
+                SelectedAgent = Agents[0].Name;
         }
+        catch { }
+    }
+
+    private async Task LoadInstalockAgentArtAsync(InstalockAgentViewModel agent)
+    {
+        try { agent.Portrait = await _images.GetAsync(agent.PortraitUrl).ConfigureAwait(true); }
         catch { }
     }
 
@@ -961,6 +1103,7 @@ public sealed class MainViewModel : ObservableObject
             InstalockRunning = result?.Ok == true && result.Running;
             InstalockStatus = !string.IsNullOrWhiteSpace(result?.Message) ? result.Message
                 : result?.Ok == true ? $"Armed for {SelectedAgent}." : "The client did not return a response.";
+            SyncInstalockButton();
         }
         catch (Exception ex) { InstalockStatus = ex.Message; }
     }
@@ -972,9 +1115,19 @@ public sealed class MainViewModel : ObservableObject
             var result = await _api.StopInstalockAsync().ConfigureAwait(true);
             InstalockRunning = false;
             InstalockStatus = !string.IsNullOrWhiteSpace(result?.Message) ? result.Message : "Instalock stopped.";
+            SyncInstalockButton();
         }
         catch (Exception ex) { InstalockStatus = ex.Message; }
     }
+
+    private async Task ToggleInstalockAsync()
+    {
+        if (InstalockRunning) await StopInstalockAsync().ConfigureAwait(true);
+        else await StartInstalockAsync().ConfigureAwait(true);
+    }
+
+    private void SyncInstalockButton() =>
+        InstalockButtonText = InstalockRunning ? $"Instalock: {SelectedAgent}" : "Instalock";
 
     private async Task RefreshInstalockAsync()
     {
@@ -988,6 +1141,7 @@ public sealed class MainViewModel : ObservableObject
                 InstalockStatus = $"Armed for {(string.IsNullOrWhiteSpace(result.Agent) ? SelectedAgent : result.Agent)}.";
             else if (result.Status is "locked" or "error")
                 InstalockStatus = result.Status == "locked" ? "Agent locked." : "Instalock stopped after an error.";
+            SyncInstalockButton();
         }
         catch { }
     }
@@ -1002,17 +1156,38 @@ public sealed class MainViewModel : ObservableObject
             _performancePoints.Clear();
             _performancePoints.AddRange(performance.Points.OrderByDescending(p => p.Ts ?? 0));
             PerformanceAccount = string.IsNullOrWhiteSpace(performance.Account.RiotId)
-                ? "COMPETITIVE HISTORY" : performance.Account.RiotId!;
-            NetRrText = $"{(performance.Summary.Net >= 0 ? "+" : "")}{performance.Summary.Net}";
-            RecordText = $"{performance.Summary.Wins} - {performance.Summary.Losses}";
-            CurrentRankText = performance.Summary.Current.Name;
-            CurrentRrText = performance.Summary.Current.Rr.HasValue
-                ? $"{performance.Summary.Current.Rr} RR" : "-- RR";
+                ? "Competitive history" : performance.Account.RiotId!;
+            if (performance.Summary.Matches > 0)
+            {
+                NetRrText = $"{(performance.Summary.Net >= 0 ? "+" : "")}{performance.Summary.Net}";
+                RecordText = $"{performance.Summary.Wins} - {performance.Summary.Losses}";
+                CurrentRankText = performance.Summary.Current.Name;
+                CurrentRrText = performance.Summary.Current.Rr.HasValue
+                    ? $"{performance.Summary.Current.Rr} RR" : "";
+                var tier = performance.Summary.Current.Tier;
+                CurrentRankIcon = null;
+                if (tier.HasValue
+                    && performance.RankIcons.TryGetValue(tier.Value.ToString(), out var iconUrl)
+                    && !string.IsNullOrWhiteSpace(iconUrl))
+                {
+                    try { CurrentRankIcon = await _images.GetAsync(iconUrl).ConfigureAwait(true); }
+                    catch { CurrentRankIcon = null; }
+                }
+            }
+            else
+            {
+                NetRrText = "—";
+                RecordText = "No matches yet";
+                CurrentRankText = "Unranked";
+                CurrentRrText = "";
+                CurrentRankIcon = null;
+            }
             PerformanceSessions.Clear();
             if (performance.Sessions.Active is not null)
                 PerformanceSessions.Add(new SessionViewModel(performance.Sessions.Active, active: true));
             foreach (var session in performance.Sessions.Archive)
                 PerformanceSessions.Add(new SessionViewModel(session, active: false));
+            HasSessions = PerformanceSessions.Count > 0;
             ApplyPerformanceFilter();
             if (scheduleFollowUp) _ = RefreshPerformanceFollowUpAsync();
         }
@@ -1051,7 +1226,7 @@ public sealed class MainViewModel : ObservableObject
             if (PerformanceTab == "Matches") _ = vm.EnsureImageAsync();
         }
         PerformanceEmptyText = PerformanceMatches.Count == 0
-            ? "Play a competitive match to begin your rank story."
+            ? "Play a competitive match to begin tracking rank progress."
             : "Select a match for the full scoreboard.";
         Raise(nameof(HasPerformance));
         Raise(nameof(MatchCountText));
@@ -1086,7 +1261,8 @@ public sealed class MainViewModel : ObservableObject
     {
         try
         {
-            var window = new ProfileWindow(_api, _images, player.Dto.Puuid, player.DisplayName)
+            var window = new ProfileWindow(_api, _images, player.Dto.Puuid, player.DisplayName,
+                player.RankName, player.Dto.RankIcon, player.PeakRankName, player.Dto.PeakIcon)
             {
                 Owner = Application.Current.MainWindow,
             };
@@ -1226,10 +1402,17 @@ public sealed class MainViewModel : ObservableObject
     private async Task CheckForUpdatesAsync()
     {
         var info = await UpdateChecker.CheckAsync(AppVersion).ConfigureAwait(true);
-        if (info is null) return;
+        if (info is null)
+        {
+            UpdateStatusText = "You're up to date.";
+            Raise(nameof(HasUpdateStatus));
+            return;
+        }
         _updateUrl = info.DownloadUrl;
-        UpdateText = $"Update available — Version {info.Version}";
+        UpdateText = $"Update available · v{info.Version}";
         HasUpdate = true;
+        UpdateStatusText = $"Update available · v{info.Version}";
+        Raise(nameof(HasUpdateStatus));
     }
 
     private void OpenUpdateUrl()

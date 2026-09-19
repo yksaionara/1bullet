@@ -4,7 +4,7 @@
         Title="Player profile — 1 Bullet" Height="720" Width="900"
         MinWidth="760" MinHeight="520"
         WindowStartupLocation="CenterOwner"
-        Background="#0A0E13">
+        Background="#0B0B0E">
     <Grid>
         <Image Source="{Binding BannerArt}" Stretch="UniformToFill"
                HorizontalAlignment="Right" Width="420" Opacity="0.22"
@@ -13,7 +13,7 @@
             <StackPanel Margin="22,18">
                 <DockPanel>
                     <Grid Width="64" Height="64" Margin="0,0,14,0">
-                        <Border Background="#1C2A36" CornerRadius="8"
+                        <Border Background="#18181C" CornerRadius="8"
                                 BorderBrush="#18E5A7" BorderThickness="2" />
                         <Image Source="{Binding Portrait}" Stretch="UniformToFill" />
                     </Grid>
@@ -26,6 +26,22 @@
                         <TextBlock Text="{Binding SubLine}" FontSize="12" Margin="0,4,0,0"
                                    Foreground="{StaticResource DimBrush}"
                                    Visibility="{Binding SubLine, Converter={StaticResource StringEmptyToCollapsed}}" />
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0" VerticalAlignment="Center"
+                                    Visibility="{Binding HasRankLine, Converter={StaticResource BoolToVisible}}">
+                            <Image Source="{Binding RankIcon}" Width="18" Height="18" Margin="0,0,7,0"
+                                   RenderOptions.BitmapScalingMode="HighQuality" />
+                            <TextBlock Text="{Binding RankLine}" FontSize="13" FontWeight="Bold"
+                                       Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
+                                        Visibility="{Binding HasPeakLine, Converter={StaticResource BoolToVisible}}">
+                                <TextBlock Text="· Peak" FontSize="10" Foreground="{StaticResource DimBrush}"
+                                           Margin="10,0,6,0" VerticalAlignment="Center" />
+                                <Image Source="{Binding PeakIcon}" Width="16" Height="16" Margin="0,0,5,0"
+                                       RenderOptions.BitmapScalingMode="HighQuality" />
+                                <TextBlock Text="{Binding PeakLine}" FontSize="11"
+                                           Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </StackPanel>
                         <TextBlock Text="{Binding Status}" FontSize="12" Margin="0,4,0,0"
                                    Foreground="{StaticResource DimBrush}"
                                    Visibility="{Binding Status, Converter={StaticResource StringEmptyToCollapsed}}" />
@@ -43,7 +59,7 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
-                                    CornerRadius="8" Background="#0D1319" Padding="8" Margin="0,0,8,8">
+                                    CornerRadius="8" Background="#0D0D10" Padding="8" Margin="0,0,8,8">
                                 <StackPanel>
                                     <TextBlock Text="{Binding Value}" FontSize="20" FontWeight="Black"
                                                HorizontalAlignment="Center"
@@ -68,7 +84,7 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
-                                    CornerRadius="8" Background="#0D1319" Padding="8"
+                                    CornerRadius="8" Background="#0D0D10" Padding="8"
                                     Margin="0,0,8,8" Width="128">
                                 <StackPanel>
                                     <TextBlock Text="{Binding Title}" FontSize="10"
@@ -90,7 +106,7 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
-                                    CornerRadius="8" Background="#0D1319" Padding="10"
+                                    CornerRadius="8" Background="#0D0D10" Padding="10"
                                     Margin="0,0,0,8" Cursor="Hand">
                                 <Border.InputBindings>
                                     <MouseBinding MouseAction="LeftClick"
@@ -99,7 +115,7 @@
                                 </Border.InputBindings>
                                 <DockPanel>
                                     <Grid Width="40" Height="40" Margin="0,0,12,0">
-                                        <Border Background="#1C2A36" CornerRadius="6" />
+                                        <Border Background="#18181C" CornerRadius="6" />
                                         <Image Source="{Binding AgentPortrait}" Stretch="UniformToFill" />
                                     </Grid>
                                     <TextBlock Text="›" DockPanel.Dock="Right" FontSize="20"

@@ -44,8 +44,12 @@ public sealed class ProfileViewModel : ObservableObject
     private readonly string _puuid;
     private ImageSource? _portrait;
     private ImageSource? _bannerArt;
+    private ImageSource? _rankIcon;
+    private ImageSource? _peakIcon;
     private string _status = "Loading…";
     private string _subLine = "";
+    private string _rankLine = "";
+    private string _peakLine = "";
 
     public string DisplayName { get; }
     public ObservableCollection<StatBox> RecentForm { get; } = new();
@@ -54,22 +58,34 @@ public sealed class ProfileViewModel : ObservableObject
 
     public ImageSource? Portrait { get => _portrait; set => Set(ref _portrait, value); }
     public ImageSource? BannerArt { get => _bannerArt; set => Set(ref _bannerArt, value); }
+    public ImageSource? RankIcon { get => _rankIcon; set => Set(ref _rankIcon, value); }
+    public ImageSource? PeakIcon { get => _peakIcon; set => Set(ref _peakIcon, value); }
     public string Status { get => _status; set => Set(ref _status, value); }
     public string SubLine { get => _subLine; set => Set(ref _subLine, value); }
+    public string RankLine { get => _rankLine; set => Set(ref _rankLine, value); }
+    public bool HasRankLine => !string.IsNullOrWhiteSpace(RankLine);
+    public string PeakLine { get => _peakLine; set => Set(ref _peakLine, value); }
+    public bool HasPeakLine => !string.IsNullOrWhiteSpace(PeakLine);
     public bool HasGames => PastGames.Count > 0;
 
     public RelayCommand OpenMatchCommand { get; }
 
-    public ProfileViewModel(ApiClient api, ImageCache images, string puuid, string displayName)
+    public ProfileViewModel(ApiClient api, ImageCache images, string puuid, string displayName,
+        string? rank = null, string? rankIcon = null, string? peakRank = null, string? peakIcon = null)
     {
         _api = api;
         _images = images;
         _puuid = puuid;
         DisplayName = displayName;
+        RankLine = rank ?? "";
+        PeakLine = peakRank ?? "";
+        Raise(nameof(HasRankLine));
+        Raise(nameof(HasPeakLine));
         OpenMatchCommand = new RelayCommand(p =>
         {
             if (p is PastGameViewModel game) OpenMatch(game);
         });
+        _ = LoadRankArtAsync(rankIcon, peakIcon);
         _ = LoadAsync();
     }
 
@@ -141,6 +157,16 @@ public sealed class ProfileViewModel : ObservableObject
                 }
             }
             if (Skins.Count == 0) Status = "Loadout unavailable for this player.";
+        }
+        catch { }
+    }
+
+    private async Task LoadRankArtAsync(string? rankIcon, string? peakIcon)
+    {
+        try
+        {
+            RankIcon = await _images.GetAsync(rankIcon).ConfigureAwait(true);
+            PeakIcon = await _images.GetAsync(peakIcon).ConfigureAwait(true);
         }
         catch { }
     }

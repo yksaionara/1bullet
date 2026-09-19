@@ -19,6 +19,7 @@ public sealed class MatchTeamViewModel
 public sealed class MatchPlayerViewModel : ObservableObject
 {
     private ImageSource? _agentPortrait;
+    private ImageSource? _rankIcon;
 
     public MatchPlayerViewModel(MatchPlayerDto dto)
     {
@@ -27,6 +28,7 @@ public sealed class MatchPlayerViewModel : ObservableObject
 
     public MatchPlayerDto Dto { get; }
     public ImageSource? AgentPortrait { get => _agentPortrait; set => Set(ref _agentPortrait, value); }
+    public ImageSource? RankIcon { get => _rankIcon; set => Set(ref _rankIcon, value); }
     public string Kda => $"{Dto.Kills}/{Dto.Deaths}/{Dto.Assists}";
     public string Detail => $"{Dto.Acs} ACS · {(Dto.HsPct.HasValue ? $"{Dto.HsPct.Value:0}% HS" : "— HS")}";
     public bool IsSubject => Dto.IsSubject;
@@ -91,7 +93,11 @@ public sealed class MatchViewModel : ObservableObject
 
     private async Task LoadArtAsync(MatchPlayerViewModel vm)
     {
-        try { vm.AgentPortrait = await _images.GetAsync(vm.Dto.AgentPortrait).ConfigureAwait(true); }
+        try
+        {
+            vm.AgentPortrait = await _images.GetAsync(vm.Dto.AgentPortrait).ConfigureAwait(true);
+            vm.RankIcon = await _images.GetAsync(vm.Dto.RankIcon).ConfigureAwait(true);
+        }
         catch { }
     }
 }

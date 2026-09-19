@@ -201,6 +201,8 @@ public sealed class PerformanceDto
     public List<PerformancePointDto> Points { get; set; } = new();
     public PerformanceSummaryDto Summary { get; set; } = new();
     public PerformanceSessionsDto Sessions { get; set; } = new();
+    // Served by history.payload as { tier: iconUrl }; may be absent on old data.
+    public Dictionary<string, string?> RankIcons { get; set; } = new();
 }
 
 public sealed class PerformanceAccountDto

@@ -814,7 +814,6 @@ class LiveMatch:
             ident = p.get("PlayerIdentity", {}) or {}
             cached, name, level, level_hidden = resolved[puuid]
             if name == _fallback_name(puuid):
-
                 agent_meta = resolve_agent(p.get("CharacterID", "") or "") or {}
                 if state != "PREGAME" and agent_meta.get("name"):
                     name = agent_meta["name"]
@@ -1002,7 +1001,7 @@ class LiveMatch:
         _LOBBY_CACHE.update(key=key, at=now, board=board)
         return board
 
-    def player_career(self, puuid: str, count: int = 8) -> dict:
+    def player_career(self, puuid: str, count: int = 5) -> dict:
         pass
         try:
             hist = self.auth.pd_get(

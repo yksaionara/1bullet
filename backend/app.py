@@ -615,7 +615,7 @@ def profile(puuid: str):
     data = None
     if _live_enabled():
         try:
-            data = live_match.LiveMatch(LocalAuth()).player_career(puuid)
+            data = live_match.LiveMatch(LocalAuth()).player_career(puuid, count=5)
             if not data.get("matches"):
                 data = None
         except Exception:
@@ -797,7 +797,7 @@ def handle_data_request(req_type: str, params: dict | None) -> dict:
             data = None
             if _live_enabled():
                 try:
-                    d = live_match.LiveMatch(LocalAuth()).player_career(puuid)
+                    d = live_match.LiveMatch(LocalAuth()).player_career(puuid, count=5)
                     if d.get("matches"):
                         data = d
                 except Exception:

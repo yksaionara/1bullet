@@ -93,7 +93,6 @@ def skins_for_weapon(weapon: str) -> list:
     return out
 
 def loadout_weapons(items: dict) -> list:
-    pass
     if not items:
         return []
     out = []

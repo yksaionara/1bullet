@@ -12,7 +12,7 @@
     <Window.InputBindings>
         <KeyBinding Key="Escape" Command="{Binding ClosePanelCommand}" />
     </Window.InputBindings>
-    <Grid Background="#050506">
+    <Grid Background="#050506" TextElement.Foreground="{StaticResource TextPrimaryBrush}">
         <Image Source="{Binding BackgroundImage}" Stretch="UniformToFill"
                Opacity="0.18"
                Visibility="{Binding HasBackground, Converter={StaticResource BoolToVisible}}" />
@@ -38,55 +38,58 @@
                         <TextBlock Text="V" Foreground="{DynamicResource AccentBrush}"
                                    FontFamily="Bahnschrift SemiBold" FontWeight="Black"
                                    FontSize="24" Margin="0,-3,9,0" />
-                        <TextBlock Text="1 BULLET" Foreground="#F2F2F4"
+                        <TextBlock Text="1 BULLET" Foreground="{StaticResource TextPrimaryBrush}"
                                    FontFamily="Bahnschrift SemiBold" FontWeight="Bold"
                                    FontSize="20" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding VersionText}" Foreground="#5F5F67"
+                        <TextBlock Text="{Binding VersionText}" Foreground="{StaticResource TextMutedBrush}"
                                    FontSize="11" Margin="9,0,0,0" VerticalAlignment="Center" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"
-                                Padding="13,8" Command="{Binding DodgeCommand}"
+                                MinHeight="34" Padding="14,7" Command="{Binding DodgeCommand}"
                                 AutomationProperties.Name="Dodge agent select"
-                                ToolTip="Leave the current Agent Select lobby without locking an agent.">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" />
-                                <TextBlock Text="Dodge" />
+                                ToolTip="Leave the current Agent Select.">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Dodge" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
-                        <Button Padding="18,9" Command="{Binding ShowPanelCommand}" CommandParameter="Instalock"
+                        <Button MinHeight="34" Padding="16,7" Command="{Binding ShowPanelCommand}" CommandParameter="Instalock"
                                 AutomationProperties.Name="Instalock"
-                                ToolTip="Automatically lock your agent when Agent Select starts.">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" />
-                                <TextBlock Text="Instalock" />
+                                ToolTip="Configure automatic agent locking.">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding InstalockButtonText}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                         <Button Style="{StaticResource ChromeButton}" Margin="8,0,0,0"
+                                MinHeight="34" Padding="14,7"
                                 Command="{Binding ShowPanelCommand}" CommandParameter="Offline"
                                 AutomationProperties.Name="Riot presence"
-                                ToolTip="Choose how you appear to friends: offline, away, mobile, or online.">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE8D7;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" />
-                                <TextBlock Text="{Binding OfflineButtonText}" />
+                                ToolTip="Control how you appear to Riot friends.">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE8D7;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding OfflineButtonText}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                         <Button Style="{StaticResource UtilityButton}" Margin="8,0,0,0"
+                                MinHeight="34" Padding="14,7"
                                 Command="{Binding ShowPanelCommand}" CommandParameter="Notifications"
-                                AutomationProperties.Name="Client status"
-                                ToolTip="VALORANT client and backend status.">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" />
-                                <TextBlock Text="Client Status" />
+                                AutomationProperties.Name="Game status"
+                                ToolTip="View current VALORANT connection state.">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Game Status" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                         <Button Style="{StaticResource UtilityButton}" Margin="8,0,0,0"
+                                MinHeight="34" Padding="14,7"
                                 Command="{Binding ShowPanelCommand}" CommandParameter="Settings"
                                 AutomationProperties.Name="App settings"
                                 ToolTip="Appearance, application, and advanced settings.">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" />
-                                <TextBlock Text="Settings" />
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Settings" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                     </StackPanel>
@@ -105,16 +108,8 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <Grid>
-                                <TextBlock Text="Matchmaking" FontSize="16" FontWeight="Bold"
-                                           Foreground="#EEEEF1" VerticalAlignment="Center" />
-                                <Border HorizontalAlignment="Right" VerticalAlignment="Center"
-                                        Background="#151519" BorderBrush="#2A2A30" BorderThickness="1"
-                                        CornerRadius="5" Padding="9,4">
-                                    <TextBlock Text="{Binding QueueStatusText}" FontSize="11" FontWeight="SemiBold"
-                                               Foreground="#B6B6BC" />
-                                </Border>
-                            </Grid>
+                            <TextBlock Text="Matchmaking" FontSize="16" FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}" />
                             <Grid Grid.Row="1" Margin="0,10,0,2">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -142,7 +137,7 @@
                                         Command="{Binding QueueActionCommand}" />
                             </Grid>
                             <TextBlock Grid.Row="2" Text="{Binding QueueHint}" FontSize="11"
-                                       Foreground="#7D7D85" TextWrapping="Wrap" />
+                                       Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
                         </Grid>
                     </Border>
 
@@ -155,35 +150,45 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" VerticalAlignment="Center"
-                                    BorderBrush="{Binding ClientBadgeColor, Converter={StaticResource HexToBrush}}" BorderThickness="1"
-                                    CornerRadius="6" Padding="9,5" Margin="0,0,10,0"
-                                    ToolTip="Whether the local VALORANT client is reachable.">
-                                <TextBlock Text="{Binding ClientBadgeText}" FontSize="10" FontWeight="Bold"
-                                           Foreground="{Binding ClientBadgeColor, Converter={StaticResource HexToBrush}}" />
-                            </Border>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border VerticalAlignment="Center"
+                                        BorderBrush="{Binding ClientBadgeColor, Converter={StaticResource HexToBrush}}" BorderThickness="1"
+                                        CornerRadius="6" Padding="9,5" Margin="0,0,8,0"
+                                        ToolTip="VALORANT game connection.">
+                                    <TextBlock Text="{Binding ClientBadgeText}" FontSize="10" FontWeight="Bold"
+                                               Foreground="{Binding ClientBadgeColor, Converter={StaticResource HexToBrush}}" />
+                                </Border>
+                                <Border VerticalAlignment="Center" Background="#151519"
+                                        BorderBrush="#2A2A30" BorderThickness="1"
+                                        CornerRadius="6" Padding="9,5"
+                                        Visibility="{Binding HasMatchContext, Converter={StaticResource InvertBoolToCollapsed}}"
+                                        ToolTip="Lobby and queue state.">
+                                    <TextBlock Text="{Binding QueueStatusText}" FontSize="11" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextSecondaryBrush}" />
+                                </Border>
+                            </StackPanel>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <WrapPanel ClipToBounds="True"
                                            Visibility="{Binding HasMatchContext, Converter={StaticResource BoolToVisible}}">
                                     <TextBlock Text="{Binding MatchStateText}" Foreground="{Binding MatchStateColor, Converter={StaticResource HexToBrush}}"
                                                FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
                                     <TextBlock Text="{Binding MapName}" FontSize="15" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
-                                    <TextBlock Text="{Binding ModeName}" Foreground="#85858D" FontSize="10" VerticalAlignment="Center" Margin="0,0,10,0" />
-                                    <TextBlock Text="{Binding ScoreText}" Foreground="#D7D7DB" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                    <TextBlock Text="{Binding ModeName}" Foreground="{StaticResource TextMutedBrush}" FontSize="10" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                    <TextBlock Text="{Binding ScoreText}" Foreground="{StaticResource TextPrimaryBrush}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
                                     <TextBlock Text="{Binding SideText}" Foreground="{Binding SideColor, Converter={StaticResource HexToBrush}}"
                                                FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
                                                 Visibility="{Binding HasWinProb, Converter={StaticResource BoolToVisible}}">
-                                        <TextBlock Text="Win" FontSize="8" Foreground="#686870" VerticalAlignment="Center" Margin="0,0,5,0" />
+                                        <TextBlock Text="Win" FontSize="8" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,5,0" />
                                         <TextBlock Text="{Binding WinProb, StringFormat={}{0}%}" FontSize="10" FontWeight="Bold"
                                                    Foreground="#36D399" VerticalAlignment="Center" Margin="0,0,6,0" />
                                         <ProgressBar Value="{Binding WinProb}" Maximum="100" Width="60" Height="5"
                                                      Foreground="{DynamicResource AccentBrush}" Background="#24242A" BorderThickness="0" />
                                     </StackPanel>
                                 </WrapPanel>
-                                <TextBlock Text="{Binding LastUpdatedText}" FontSize="11" Foreground="#74747C"
+                                <TextBlock Text="{Binding LastUpdatedText}" FontSize="11" Foreground="{StaticResource TextMutedBrush}"
                                            Visibility="{Binding HasMatchContext, Converter={StaticResource InvertBoolToCollapsed}}" />
-                                <TextBlock Text="{Binding MatchActionMessage}" FontSize="11" Foreground="#A0A0A7"
+                                <TextBlock Text="{Binding MatchActionMessage}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
                                            TextWrapping="Wrap" Margin="0,2,0,0"
                                            Visibility="{Binding HasMatchActionMessage, Converter={StaticResource BoolToVisible}}" />
                             </StackPanel>
@@ -191,7 +196,7 @@
                                 <Button Style="{StaticResource SecondaryButton}" Padding="11,7" Margin="0,0,8,0"
                                         Command="{Binding ShowTeamSideCommand}"
                                         IsEnabled="{Binding HasMatchContext}"
-                                        ToolTip="Available during Agent Select or a live match. Shows whether your team starts on Attack or Defense."
+                                        ToolTip="Available during Agent Select and live matches."
                                         ToolTipService.ShowOnDisabled="True">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" Margin="0,0,7,0" />
@@ -199,9 +204,9 @@
                                     </StackPanel>
                                 </Button>
                                 <Button Content="{Binding AutoRefreshText}" Style="{StaticResource UtilityButton}"
-                                        Padding="11,7" Margin="0,0,8,0"
+                                        Padding="9,6" Margin="0,0,8,0" FontSize="11"
                                         Command="{Binding ToggleAutoRefreshCommand}"
-                                        ToolTip="Toggle automatic live refresh every 5 seconds." />
+                                        ToolTip="Live refresh every 5 seconds. Click to pause or resume." />
                                 <Button Style="{StaticResource UtilityButton}" Width="37" Height="34" Padding="0"
                                         Command="{Binding RefreshCommand}" AutomationProperties.Name="Refresh now"
                                         ToolTip="Refresh all data now.">
@@ -211,6 +216,22 @@
                         </Grid>
                     </Border>
 
+                    <!-- Backend failure: compact alert, diagnostics stay in Settings -->
+                    <Border Margin="0,10,0,0" BorderBrush="#5A232B" BorderThickness="1"
+                            Background="#160D10" CornerRadius="8" Padding="12,9"
+                            Visibility="{Binding HasBackendFailure, Converter={StaticResource BoolToVisible}}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Content="Retry" Padding="12,6" Margin="0,0,8,0"
+                                        Command="{Binding RetryBackendCommand}" />
+                                <Button Content="Diagnostics" Style="{StaticResource SecondaryButton}" Padding="12,6"
+                                        Command="{Binding ShowPanelCommand}" CommandParameter="Settings" />
+                            </StackPanel>
+                            <TextBlock Text="1 Bullet couldn't connect to its local service."
+                                       Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Border>
+
                     <!-- Update notice -->
                     <Border Margin="0,10,0,0" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1"
                             Background="#180B0E" CornerRadius="7" Padding="12,8"
@@ -218,21 +239,22 @@
                         <DockPanel>
                             <Button DockPanel.Dock="Right" Content="Download" Padding="12,6"
                                     Command="{Binding DownloadUpdateCommand}" />
-                            <TextBlock Text="{Binding UpdateText}" Foreground="#E6E6E8" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding UpdateText}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
                         </DockPanel>
                     </Border>
                     <Border Margin="0,10,0,0" BorderBrush="#493136" BorderThickness="1"
                             Background="#160D10" CornerRadius="7" Padding="12,8"
                             Visibility="{Binding HasNotice, Converter={StaticResource BoolToVisible}}">
-                        <TextBlock Text="{Binding NoticeText}" Foreground="#C7C7CC" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding NoticeText}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
                     </Border>
 
                     <!-- 3. Parties + live players -->
                     <Border Margin="0,10,0,0" Background="#0A0A0D"
-                            BorderBrush="#2A2A30" BorderThickness="1" CornerRadius="8" Padding="12,8">
+                            BorderBrush="#2A2A30" BorderThickness="1" CornerRadius="8" Padding="12,8"
+                            Visibility="{Binding HasParties, Converter={StaticResource BoolToVisible}}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="Parties" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="#9A91A8" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                       Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,10,0" />
                             <ItemsControl ItemsSource="{Binding PartyPills}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
@@ -247,8 +269,6 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <TextBlock Text="No parties detected." FontSize="11" Foreground="#606068"
-                                       Visibility="{Binding PartyPills.Count, Converter={StaticResource ZeroToVisible}}" />
                         </StackPanel>
                     </Border>
 
@@ -257,9 +277,9 @@
                             <Border Background="#0A0A0D" BorderBrush="#242429"
                                     BorderThickness="1" CornerRadius="12" Padding="20">
                                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <TextBlock Text="No live match data yet" Foreground="#C9C9CF" FontSize="14"
+                                    <TextBlock Text="No live match data yet" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14"
                                                FontWeight="SemiBold" TextAlignment="Center" />
-                                    <TextBlock Text="{Binding EmptyMessage}" Foreground="#8B8B93" FontSize="12"
+                                    <TextBlock Text="{Binding EmptyMessage}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"
                                                TextWrapping="Wrap" TextAlignment="Center" Margin="0,6,0,0" />
                                 </StackPanel>
                             </Border>
@@ -280,7 +300,7 @@
                                                     </Rectangle>
                                                     <TextBlock Text="{Binding Title}" FontSize="17" FontWeight="Bold"
                                                                Foreground="{DynamicResource AccentBrush}" />
-                                                    <TextBlock Text="{Binding Count, StringFormat={}{0} players}" FontSize="11" Foreground="#8A8A92"
+                                                    <TextBlock Text="{Binding Subtitle}" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
                                                                Margin="12,0,0,0" VerticalAlignment="Center" />
                                                 </StackPanel>
                                                 <Border HorizontalAlignment="Right" VerticalAlignment="Center"
@@ -292,21 +312,21 @@
                                                         <StackPanel Margin="0,0,12,0">
                                                             <TextBlock Text="{Binding AvgRank}" FontSize="12" FontWeight="Bold"
                                                                        Foreground="{Binding AvgRankColor, Converter={StaticResource HexToBrush}}" />
-                                                            <TextBlock Text="Avg rank" FontSize="8" Foreground="#66666E" />
+                                                            <TextBlock Text="Avg rank" FontSize="8" Foreground="{StaticResource TextMutedBrush}" />
                                                         </StackPanel>
                                                         <Border Width="1" Background="#25252A" Margin="0,0,12,0" />
                                                         <StackPanel Width="48">
                                                             <TextBlock Text="{Binding AvgKd}" HorizontalAlignment="Center" FontWeight="Bold" />
-                                                            <TextBlock Text="Avg K/D" HorizontalAlignment="Center" FontSize="8" Foreground="#66666E" />
+                                                            <TextBlock Text="Avg K/D" HorizontalAlignment="Center" FontSize="8" Foreground="{StaticResource TextMutedBrush}" />
                                                         </StackPanel>
                                                         <StackPanel Width="48">
                                                             <TextBlock Text="{Binding AvgWr}" HorizontalAlignment="Center" FontWeight="Bold" />
-                                                            <TextBlock Text="Avg win" HorizontalAlignment="Center" FontSize="8" Foreground="#66666E" />
+                                                            <TextBlock Text="Avg win" HorizontalAlignment="Center" FontSize="8" Foreground="{StaticResource TextMutedBrush}" />
                                                         </StackPanel>
                                                         <StackPanel Width="48">
                                                             <TextBlock Text="{Binding Smurfs}" HorizontalAlignment="Center" FontWeight="Bold"
                                                                        Foreground="{Binding SmurfColor, Converter={StaticResource HexToBrush}}" />
-                                                            <TextBlock Text="Smurfs" HorizontalAlignment="Center" FontSize="8" Foreground="#66666E" />
+                                                            <TextBlock Text="Suspected" HorizontalAlignment="Center" FontSize="8" Foreground="{StaticResource TextMutedBrush}" />
                                                         </StackPanel>
                                                     </StackPanel>
                                                 </Border>
@@ -316,87 +336,126 @@
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
                                                         <Border Background="#0D0D10" BorderBrush="#242429" BorderThickness="1"
-                                                                CornerRadius="10" Margin="0,0,0,8" MinHeight="82" Cursor="Hand">
+                                                                CornerRadius="10" Margin="0,0,0,8" Padding="10,8" Cursor="Hand">
                                                             <Border.InputBindings>
                                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding OpenProfileCommand}" />
                                                             </Border.InputBindings>
                                                             <Grid>
                                                                 <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="6" />
+                                                                    <ColumnDefinition Width="4" />
+                                                                    <ColumnDefinition Width="Auto" />
                                                                     <ColumnDefinition Width="*" />
-                                                                    <ColumnDefinition Width="340" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="Auto" />
                                                                 </Grid.ColumnDefinitions>
                                                                 <Rectangle Grid.Column="0" Fill="{Binding PartyColor, Converter={StaticResource HexToBrush}}"
-                                                                           RadiusX="3" RadiusY="3" Margin="0,0,0,0"
+                                                                           RadiusX="2" RadiusY="2"
                                                                            Visibility="{Binding HasParty, Converter={StaticResource BoolToVisible}}" />
-                                                                <StackPanel Grid.Column="1" Margin="12,9" VerticalAlignment="Center">
-                                                                    <StackPanel Orientation="Horizontal">
-                                                                        <Border Background="{Binding PartyColor, Converter={StaticResource HexToBrush}}"
-                                                                                CornerRadius="4" Padding="7,2" Margin="0,0,8,0"
-                                                                                Visibility="{Binding HasParty, Converter={StaticResource BoolToVisible}}">
-                                                                            <TextBlock Text="{Binding Dto.Party.Number}" FontSize="10" FontWeight="Bold" />
-                                                                        </Border>
-                                                                        <TextBlock Text="{Binding DisplayName}" FontFamily="Bahnschrift SemiBold"
-                                                                                   FontSize="17" FontWeight="Bold" Foreground="#EEEEF1" />
-                                                                        <TextBlock Text="{Binding HiddenTag}" FontSize="10" Foreground="#8A8A92"
-                                                                                   VerticalAlignment="Center" />
-                                                                        <Border Background="#4A151B" CornerRadius="4" Padding="7,2" Margin="8,0,0,0"
-                                                                                Visibility="{Binding Dto.IsSelf, Converter={StaticResource BoolToVisible}}">
-                                                                            <TextBlock Text="YOU" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" />
-                                                                        </Border>
-                                                                        <Border Background="#250B0E" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1"
-                                                                                CornerRadius="4" Padding="7,2" Margin="8,0,0,0"
-                                                                                Visibility="{Binding IsSmurf, Converter={StaticResource BoolToVisible}}">
-                                                                            <TextBlock Text="SMURF" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" />
-                                                                        </Border>
-                                                                    </StackPanel>
-                                                                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                                                        <Image Source="{Binding RankIcon}" Width="18" Height="18" Margin="0,0,7,0" />
-                                                                        <TextBlock Text="{Binding RankName}" FontSize="13" FontWeight="Bold" Foreground="#D7D7DB" />
+                                                                <Grid Grid.Column="1" Width="46" Height="46" Margin="10,0,0,0"
+                                                                      VerticalAlignment="Center" ToolTip="{Binding Dto.Agent}">
+                                                                    <Border Background="#18181C" CornerRadius="8" />
+                                                                    <Image Source="{Binding AgentPortrait}" Stretch="UniformToFill"
+                                                                           RenderOptions.BitmapScalingMode="HighQuality">
+                                                                        <Image.Clip>
+                                                                            <RectangleGeometry Rect="0,0,46,46" RadiusX="8" RadiusY="8" />
+                                                                        </Image.Clip>
+                                                                    </Image>
+                                                                </Grid>
+                                                                <StackPanel Grid.Column="2" Margin="12,0" VerticalAlignment="Center">
+                                                                    <DockPanel>
+                                                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                                                            <Border Background="#4A151B" CornerRadius="5" Padding="7,2" Margin="8,0,0,0"
+                                                                                    Visibility="{Binding Dto.IsSelf, Converter={StaticResource BoolToVisible}}">
+                                                                                <TextBlock Text="YOU" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" />
+                                                                            </Border>
+                                                                            <Border Background="#250B0E" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1"
+                                                                                    CornerRadius="5" Padding="7,2" Margin="8,0,0,0"
+                                                                                    Visibility="{Binding IsSmurf, Converter={StaticResource BoolToVisible}}"
+                                                                                    ToolTip="Flagged by smurf-detection heuristics.">
+                                                                                <TextBlock Text="SUSPECT" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" />
+                                                                            </Border>
+                                                                        </StackPanel>
+                                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                            <Border Background="{Binding PartyColor, Converter={StaticResource HexToBrush}}"
+                                                                                    CornerRadius="5" Padding="7,2" Margin="0,0,8,0" VerticalAlignment="Center"
+                                                                                    Visibility="{Binding HasParty, Converter={StaticResource BoolToVisible}}">
+                                                                                <TextBlock Text="{Binding Dto.Party.Number}" FontSize="10" FontWeight="Bold" />
+                                                                            </Border>
+                                                                             <TextBlock Text="{Binding DisplayName}" FontFamily="Bahnschrift SemiBold"
+                                                                                        FontSize="17" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"
+                                                                                        TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                                                         </StackPanel>
+                                                                    </DockPanel>
+                                                                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0" VerticalAlignment="Center">
+                                                                        <Image Source="{Binding RankIcon}" Width="18" Height="18" Margin="0,0,7,0"
+                                                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                                                        <TextBlock Text="{Binding RankName}" FontSize="13" FontWeight="Bold"
+                                                                                   Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
                                                                         <TextBlock Text="{Binding RrText}" FontSize="12" FontWeight="Bold"
-                                                                                   Foreground="{DynamicResource AccentBrush}" Margin="7,0,0,0" />
-                                                                        <TextBlock Text="Peak" FontSize="9" Foreground="#62626A" Margin="12,2,6,0" />
-                                                                        <Image Source="{Binding PeakIcon}" Width="16" Height="16" Margin="0,0,5,0" />
-                                                                        <TextBlock Text="{Binding PeakRankName}" FontSize="11"
+                                                                                   Foreground="{DynamicResource AccentBrush}" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                                                        <TextBlock Text="· Peak" FontSize="10" Foreground="{StaticResource TextMutedBrush}"
+                                                                                   Margin="12,0,6,0" VerticalAlignment="Center" />
+                                                                        <Image Source="{Binding PeakIcon}" Width="16" Height="16" Margin="0,0,5,0"
+                                                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                                                        <TextBlock Text="{Binding PeakRankName}" FontSize="11" VerticalAlignment="Center"
                                                                                    Foreground="{Binding Dto.PeakColor, Converter={StaticResource HexToBrush}}" />
                                                                     </StackPanel>
                                                                 </StackPanel>
-                                                                <Grid Grid.Column="2" Margin="0,8,9,8">
+                                                                <Grid Grid.Column="3" VerticalAlignment="Center" Margin="4,0,0,0">
                                                                     <Grid.ColumnDefinitions>
-                                                                        <ColumnDefinition />
-                                                                        <ColumnDefinition />
-                                                                        <ColumnDefinition />
-                                                                        <ColumnDefinition />
-                                                                        <ColumnDefinition Width="84" />
-                                                                        <ColumnDefinition Width="40" />
+                                                                        <ColumnDefinition Width="56" />
+                                                                        <ColumnDefinition Width="56" />
+                                                                        <ColumnDefinition Width="56" />
+                                                                        <ColumnDefinition Width="56" />
                                                                     </Grid.ColumnDefinitions>
                                                                     <StackPanel VerticalAlignment="Center">
                                                                         <TextBlock Text="{Binding KdText}" HorizontalAlignment="Center" FontSize="15" FontWeight="Bold"
                                                                                    Foreground="{Binding KdValue, Converter={StaticResource KdToBrush}}" />
-                                                                        <TextBlock Text="K/D" HorizontalAlignment="Center" FontSize="8" Foreground="#62626A" />
+                                                                        <TextBlock Text="K/D" HorizontalAlignment="Center" FontSize="8" Foreground="{StaticResource TextMutedBrush}" />
                                                                     </StackPanel>
                                                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                                        <TextBlock Text="{Binding HsText}" HorizontalAlignment="Center" FontSize="15" FontWeight="Bold" />
-                                                                        <TextBlock Text="HS%" HorizontalAlignment="Center" FontSize="8" Foreground="#62626A" />
+                                                                        <TextBlock Text="{Binding HsText}" HorizontalAlignment="Center" FontSize="15" FontWeight="Bold"
+                                                                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                                                                        <TextBlock Text="HS%" HorizontalAlignment="Center" FontSize="8" Foreground="{StaticResource TextMutedBrush}" />
                                                                     </StackPanel>
                                                                     <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                                                                        <TextBlock Text="{Binding WinText}" HorizontalAlignment="Center" FontSize="15" FontWeight="Bold" />
-                                                                        <TextBlock Text="Win" HorizontalAlignment="Center" FontSize="8" Foreground="#62626A" />
+                                                                        <TextBlock Text="{Binding WinText}" HorizontalAlignment="Center" FontSize="15" FontWeight="Bold"
+                                                                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                                                                        <TextBlock Text="Win" HorizontalAlignment="Center" FontSize="8" Foreground="{StaticResource TextMutedBrush}" />
                                                                     </StackPanel>
                                                                     <StackPanel Grid.Column="3" VerticalAlignment="Center">
-                                                                        <TextBlock Text="{Binding LvlText}" HorizontalAlignment="Center" FontSize="15" FontWeight="Bold" />
-                                                                        <TextBlock Text="Level" HorizontalAlignment="Center" FontSize="8" Foreground="#62626A" />
+                                                                        <TextBlock Text="{Binding LvlText}" HorizontalAlignment="Center" FontSize="15" FontWeight="Bold"
+                                                                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                                                                        <TextBlock Text="Level" HorizontalAlignment="Center" FontSize="8" Foreground="{StaticResource TextMutedBrush}" />
                                                                     </StackPanel>
-                                                                    <StackPanel Grid.Column="4" VerticalAlignment="Center">
-                                                                        <TextBlock Text="{Binding AgentUpper}" HorizontalAlignment="Center" FontSize="11" FontWeight="Bold" />
-                                                                        <TextBlock Text="{Binding RoleUpper}" HorizontalAlignment="Center" FontSize="8" Foreground="#62626A" />
-                                                                    </StackPanel>
-                                                                    <Button Grid.Column="5" Style="{StaticResource ChromeButton}" Padding="0" Width="36" Height="38"
-                                                                            Command="{Binding OpenProfileCommand}"
-                                                                            ToolTip="Open player profile.">
-                                                                        <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="17" />
-                                                                    </Button>
                                                                 </Grid>
+                                                                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                                                                    <StackPanel Width="124">
+                                                                        <TextBlock Text="Vandal" FontSize="9" FontWeight="SemiBold"
+                                                                                   Foreground="{StaticResource TextMutedBrush}" />
+                                                                        <Image Source="{Binding Vandal.Icon}" Height="26" Stretch="Uniform" Margin="0,3"
+                                                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                                                        <TextBlock Text="{Binding Vandal.Name}" FontSize="11"
+                                                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                                                   TextTrimming="CharacterEllipsis" />
+                                                                    </StackPanel>
+                                                                    <StackPanel Width="124" Margin="10,0,0,0">
+                                                                        <TextBlock Text="Phantom" FontSize="9" FontWeight="SemiBold"
+                                                                                   Foreground="{StaticResource TextMutedBrush}" />
+                                                                        <Image Source="{Binding Phantom.Icon}" Height="26" Stretch="Uniform" Margin="0,3"
+                                                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                                                        <TextBlock Text="{Binding Phantom.Name}" FontSize="11"
+                                                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                                                   TextTrimming="CharacterEllipsis" />
+                                                                    </StackPanel>
+                                                                </StackPanel>
+                                                                <Button Grid.Column="5" Style="{StaticResource ChromeButton}" Padding="0" Width="36" Height="38"
+                                                                        Margin="10,0,0,0" VerticalAlignment="Center"
+                                                                        Command="{Binding OpenProfileCommand}"
+                                                                        ToolTip="View profile">
+                                                                    <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="17" />
+                                                                </Button>
                                                             </Grid>
                                                         </Border>
                                                     </DataTemplate>
@@ -419,22 +478,22 @@
                                         <Rectangle Width="4" Height="20" RadiusX="2" Fill="{DynamicResource AccentBrush}" Margin="0,0,10,0" />
                                         <TextBlock Text="Performance" FontSize="16" FontWeight="Bold" />
                                         <Border Background="#151519" CornerRadius="5" Padding="8,3" Margin="10,0,0,0">
-                                            <TextBlock Text="{Binding PerformanceAccount}" FontSize="9" Foreground="#96969E" />
+                                            <TextBlock Text="{Binding PerformanceAccount}" FontSize="9" Foreground="{StaticResource TextMutedBrush}" />
                                         </Border>
                                     </StackPanel>
                                     <TextBlock Text="Rank progress, match reports, and sessions"
-                                               FontSize="11" Foreground="#85858D" Margin="0,5,0,0" />
+                                               FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,5,0,0" />
                                 </StackPanel>
                                 <Border HorizontalAlignment="Right" VerticalAlignment="Center" Background="#08080A"
                                         BorderBrush="#202025" BorderThickness="1" CornerRadius="10" Padding="3">
                                     <StackPanel Orientation="Horizontal">
-                                        <Button Content="Overview" Command="{Binding SelectPerformanceTabCommand}" CommandParameter="Overview">
+                                        <Button Content="Overview" MinWidth="88" Command="{Binding SelectPerformanceTabCommand}" CommandParameter="Overview">
                                             <Button.Style><Style TargetType="Button" BasedOn="{StaticResource FilterButton}"><Style.Triggers><DataTrigger Binding="{Binding PerformanceTab}" Value="Overview"><Setter Property="Background" Value="#29292E" /><Setter Property="Foreground" Value="#F1F1F3" /></DataTrigger></Style.Triggers></Style></Button.Style>
                                         </Button>
-                                        <Button Content="Matches" Command="{Binding SelectPerformanceTabCommand}" CommandParameter="Matches">
+                                        <Button Content="Matches" MinWidth="88" Command="{Binding SelectPerformanceTabCommand}" CommandParameter="Matches">
                                             <Button.Style><Style TargetType="Button" BasedOn="{StaticResource FilterButton}"><Style.Triggers><DataTrigger Binding="{Binding PerformanceTab}" Value="Matches"><Setter Property="Background" Value="#29292E" /><Setter Property="Foreground" Value="#F1F1F3" /></DataTrigger></Style.Triggers></Style></Button.Style>
                                         </Button>
-                                        <Button Content="Sessions" Command="{Binding SelectPerformanceTabCommand}" CommandParameter="Sessions">
+                                        <Button Content="Sessions" MinWidth="88" Command="{Binding SelectPerformanceTabCommand}" CommandParameter="Sessions">
                                             <Button.Style><Style TargetType="Button" BasedOn="{StaticResource FilterButton}"><Style.Triggers><DataTrigger Binding="{Binding PerformanceTab}" Value="Sessions"><Setter Property="Background" Value="#29292E" /><Setter Property="Foreground" Value="#F1F1F3" /></DataTrigger></Style.Triggers></Style></Button.Style>
                                         </Button>
                                     </StackPanel>
@@ -442,49 +501,58 @@
                             </Grid>
                             <Border Height="1" Background="#1E1E23" Margin="0,12,0,12" />
 
-                            <!-- Overview -->
-                            <Grid Visibility="{Binding IsOverviewTab, Converter={StaticResource BoolToVisible}}">
+                            <!-- Overview: compact empty state until history exists -->
+                            <StackPanel Visibility="{Binding IsOverviewTab, Converter={StaticResource BoolToVisible}}">
+                            <Border BorderBrush="#27272D" BorderThickness="1" CornerRadius="10" Background="#08080A"
+                                    Padding="18" Visibility="{Binding HasPerformance, Converter={StaticResource InvertBoolToCollapsed}}">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="No competitive history yet" Foreground="{StaticResource TextPrimaryBrush}"
+                                               FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Play a competitive match to begin tracking rank progress."
+                                               Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="0,6,0,0"
+                                               TextAlignment="Center" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                            <Grid Visibility="{Binding HasPerformance, Converter={StaticResource BoolToVisible}}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="290" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Margin="0,0,14,0">
                                     <Grid Margin="0,0,0,10">
-                                        <TextBlock Text="{Binding MatchCountText}" FontSize="11" Foreground="#85858D" VerticalAlignment="Center" />
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <TextBlock Text="{Binding MatchCountText}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" />
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                            <TextBlock Text="Matches" FontSize="10" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0" />
                                             <Button Content="10" Command="{Binding SetMatchLimitCommand}" CommandParameter="10">
                                                 <Button.Style><Style TargetType="Button" BasedOn="{StaticResource FilterButton}"><Style.Triggers><DataTrigger Binding="{Binding MatchLimit}" Value="10"><Setter Property="Background" Value="#29292E" /><Setter Property="Foreground" Value="#F1F1F3" /></DataTrigger></Style.Triggers></Style></Button.Style>
                                             </Button>
                                             <Button Content="20" Command="{Binding SetMatchLimitCommand}" CommandParameter="20">
                                                 <Button.Style><Style TargetType="Button" BasedOn="{StaticResource FilterButton}"><Style.Triggers><DataTrigger Binding="{Binding MatchLimit}" Value="20"><Setter Property="Background" Value="#29292E" /><Setter Property="Foreground" Value="#F1F1F3" /></DataTrigger></Style.Triggers></Style></Button.Style>
                                             </Button>
-                                            <Button Content="40" Command="{Binding SetMatchLimitCommand}" CommandParameter="40" Margin="0,0,8,0">
+                                            <Button Content="40" Command="{Binding SetMatchLimitCommand}" CommandParameter="40" Margin="0,0,4,0">
                                                 <Button.Style><Style TargetType="Button" BasedOn="{StaticResource FilterButton}"><Style.Triggers><DataTrigger Binding="{Binding MatchLimit}" Value="40"><Setter Property="Background" Value="#29292E" /><Setter Property="Foreground" Value="#F1F1F3" /></DataTrigger></Style.Triggers></Style></Button.Style>
                                             </Button>
+                                            <Border Width="1" Background="#24242A" Margin="6,4,6,4" />
+                                            <TextBlock Text="Period" FontSize="10" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0" />
                                             <Button Content="Act" Command="{Binding SetPerformanceScopeCommand}" CommandParameter="Act">
                                                 <Button.Style><Style TargetType="Button" BasedOn="{StaticResource FilterButton}"><Style.Triggers><DataTrigger Binding="{Binding PerformanceScope}" Value="Act"><Setter Property="Background" Value="#29292E" /><Setter Property="Foreground" Value="#F1F1F3" /></DataTrigger></Style.Triggers></Style></Button.Style>
                                             </Button>
-                                            <Button Content="All" Command="{Binding SetPerformanceScopeCommand}" CommandParameter="All" Margin="0,0,8,0">
+                                            <Button Content="All" Command="{Binding SetPerformanceScopeCommand}" CommandParameter="All" Margin="0,0,4,0">
                                                 <Button.Style><Style TargetType="Button" BasedOn="{StaticResource FilterButton}"><Style.Triggers><DataTrigger Binding="{Binding PerformanceScope}" Value="All"><Setter Property="Background" Value="#29292E" /><Setter Property="Foreground" Value="#F1F1F3" /></DataTrigger></Style.Triggers></Style></Button.Style>
                                             </Button>
-                                            <Button Content="RR change" Command="{Binding SetChartModeCommand}" CommandParameter="RR change">
+                                            <Border Width="1" Background="#24242A" Margin="6,4,6,4" />
+                                            <TextBlock Text="Chart" FontSize="10" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                            <Button Content="RR Change" Command="{Binding SetChartModeCommand}" CommandParameter="RR change">
                                                 <Button.Style><Style TargetType="Button" BasedOn="{StaticResource FilterButton}"><Style.Triggers><DataTrigger Binding="{Binding ChartMode}" Value="RR change"><Setter Property="Background" Value="#29292E" /><Setter Property="Foreground" Value="#F1F1F3" /></DataTrigger></Style.Triggers></Style></Button.Style>
                                             </Button>
-                                            <Button Content="Rank journey" Command="{Binding SetChartModeCommand}" CommandParameter="Rank journey">
+                                            <Button Content="Rank Journey" Command="{Binding SetChartModeCommand}" CommandParameter="Rank journey">
                                                 <Button.Style><Style TargetType="Button" BasedOn="{StaticResource FilterButton}"><Style.Triggers><DataTrigger Binding="{Binding ChartMode}" Value="Rank journey"><Setter Property="Background" Value="#29292E" /><Setter Property="Foreground" Value="#F1F1F3" /></DataTrigger></Style.Triggers></Style></Button.Style>
                                             </Button>
                                         </StackPanel>
                                     </Grid>
                                     <Border MinHeight="150" BorderBrush="#27272D" BorderThickness="1" CornerRadius="10" Background="#08080A">
                                         <Grid>
-                                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                        Visibility="{Binding HasPerformance, Converter={StaticResource InvertBoolToCollapsed}}">
-                                                <TextBlock Text="No competitive history yet" Foreground="#C9C9CF" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                                                <TextBlock Text="Play a competitive match to begin tracking rank progress."
-                                                           Foreground="#777780" FontSize="11" Margin="0,6,0,0" TextAlignment="Center" />
-                                            </StackPanel>
-                                            <ItemsControl ItemsSource="{Binding PerformanceMatches}" Margin="10"
-                                                          Visibility="{Binding HasPerformance, Converter={StaticResource BoolToVisible}}">
+                                            <ItemsControl ItemsSource="{Binding PerformanceMatches}" Margin="10">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
                                                         <Border BorderBrush="#1D1D22" BorderThickness="0,0,0,1" Padding="8,6" Cursor="Hand">
@@ -507,40 +575,58 @@
                                 </StackPanel>
                                 <StackPanel Grid.Column="1">
                                     <Border BorderBrush="#27272D" BorderThickness="1" CornerRadius="10" Padding="14" MinHeight="64">
-                                        <TextBlock Text="{Binding PerformanceEmptyText}" TextWrapping="Wrap" Foreground="#A1A1A8" FontSize="12" />
+                                        <TextBlock Text="{Binding PerformanceEmptyText}" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
                                     </Border>
                                     <Grid Margin="0,10,0,0">
                                         <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
                                         <Border BorderBrush="#202025" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,5,0">
                                             <StackPanel>
-                                                <TextBlock Text="Net RR" FontSize="8" Foreground="#6D6D75" />
+                                                <TextBlock Text="Net RR" FontSize="8" Foreground="{StaticResource TextMutedBrush}" />
                                                 <TextBlock Text="{Binding NetRrText}" FontSize="20" FontWeight="Bold" Foreground="#36D399" Margin="0,4,0,0" />
                                             </StackPanel>
                                         </Border>
                                         <Border Grid.Column="1" BorderBrush="#202025" BorderThickness="1" CornerRadius="10" Padding="12" Margin="5,0,0,0">
                                             <StackPanel>
-                                                <TextBlock Text="Record" FontSize="8" Foreground="#6D6D75" />
+                                                <TextBlock Text="Record" FontSize="8" Foreground="{StaticResource TextMutedBrush}" />
                                                 <TextBlock Text="{Binding RecordText}" FontSize="20" FontWeight="Bold" Margin="0,4,0,0" />
                                             </StackPanel>
                                         </Border>
                                     </Grid>
                                     <Border BorderBrush="#202025" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,8,0,0">
                                         <Grid>
-                                            <StackPanel>
-                                                <TextBlock Text="Current rank" FontSize="8" Foreground="#6D6D75" />
-                                                <TextBlock Text="{Binding CurrentRankText}" FontWeight="Bold" Margin="0,4,0,0" />
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Source="{Binding CurrentRankIcon}" Width="22" Height="22" Margin="0,0,9,0"
+                                                       VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"
+                                                       Visibility="{Binding CurrentRankIcon, Converter={StaticResource NullToCollapsed}}" />
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <TextBlock Text="Current rank" FontSize="8" Foreground="{StaticResource TextMutedBrush}" />
+                                                    <TextBlock Text="{Binding CurrentRankText}" FontWeight="Bold" Margin="0,4,0,0" />
+                                                </StackPanel>
                                             </StackPanel>
                                             <TextBlock Text="{Binding CurrentRrText}" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                                                       Foreground="{DynamicResource AccentBrush}" FontWeight="Bold" />
+                                                       Foreground="{DynamicResource AccentBrush}" FontWeight="Bold"
+                                                       Visibility="{Binding CurrentRrText, Converter={StaticResource StringEmptyToCollapsed}}" />
                                         </Grid>
                                     </Border>
                                 </StackPanel>
                             </Grid>
+                            </StackPanel>
 
                             <!-- Match history -->
                             <StackPanel Visibility="{Binding IsMatchesTab, Converter={StaticResource BoolToVisible}}">
                                 <TextBlock Text="Recent competitive matches — select any match for the full scoreboard."
-                                           FontSize="11" Foreground="#777780" Margin="0,0,0,9" />
+                                           FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,9"
+                                           Visibility="{Binding HasPerformance, Converter={StaticResource BoolToVisible}}" />
+                                <Border BorderBrush="#27272D" BorderThickness="1" CornerRadius="10" Background="#08080A"
+                                        Padding="18" Visibility="{Binding HasPerformance, Converter={StaticResource InvertBoolToCollapsed}}">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="No competitive history yet" Foreground="{StaticResource TextPrimaryBrush}"
+                                                   FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                        <TextBlock Text="Play a competitive match to begin tracking rank progress."
+                                                   Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="0,6,0,0"
+                                                   TextAlignment="Center" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
                                 <ItemsControl ItemsSource="{Binding PerformanceMatches}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -558,16 +644,16 @@
                                                     </Border>
                                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding Map}" FontSize="14" FontWeight="Bold" />
-                                                        <TextBlock Text="{Binding Agent}" FontSize="10" Foreground="#777780" />
+                                                        <TextBlock Text="{Binding Agent}" FontSize="10" Foreground="{StaticResource TextMutedBrush}" />
                                                     </StackPanel>
                                                     <StackPanel Grid.Column="2" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding ScoreText}" FontWeight="Bold" HorizontalAlignment="Center" />
-                                                        <TextBlock Text="{Binding DetailText}" FontSize="9" Foreground="#777780" HorizontalAlignment="Center" />
+                                                        <TextBlock Text="{Binding DetailText}" FontSize="9" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" />
                                                     </StackPanel>
                                                     <StackPanel Grid.Column="3" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding DeltaText}" FontWeight="Bold" HorizontalAlignment="Right"
                                                                    Foreground="{Binding ResultColor, Converter={StaticResource HexToBrush}}" />
-                                                        <TextBlock Text="{Binding DateText}" FontSize="9" Foreground="#66666E" HorizontalAlignment="Right" />
+                                                        <TextBlock Text="{Binding DateText}" FontSize="9" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Right" />
                                                     </StackPanel>
                                                 </Grid>
                                             </Border>
@@ -582,6 +668,16 @@
                                     <Button Content="Start new session" Command="{Binding SessionActionCommand}" CommandParameter="start" Margin="0,0,8,0" />
                                     <Button Content="Archive and restart" Style="{StaticResource SecondaryButton}" Command="{Binding SessionActionCommand}" CommandParameter="end" />
                                 </StackPanel>
+                                <Border BorderBrush="#27272D" BorderThickness="1" CornerRadius="10" Background="#08080A"
+                                        Padding="18" Margin="0,0,0,8" Visibility="{Binding HasSessions, Converter={StaticResource InvertBoolToCollapsed}}">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="No sessions yet" Foreground="{StaticResource TextPrimaryBrush}"
+                                                   FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                        <TextBlock Text="Sessions track your ranked games automatically once you play."
+                                                   Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="0,6,0,0"
+                                                   TextAlignment="Center" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
                                 <ItemsControl ItemsSource="{Binding PerformanceSessions}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -589,10 +685,10 @@
                                                 <Grid>
                                                     <StackPanel>
                                                         <TextBlock Text="{Binding Status}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" />
-                                                        <TextBlock Text="{Binding DateText}" FontSize="11" Foreground="#777780" Margin="0,4,0,0" />
+                                                        <TextBlock Text="{Binding DateText}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,4,0,0" />
                                                     </StackPanel>
                                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding Matches}" Margin="0,0,20,0" Foreground="#9A9AA1" />
+                                                        <TextBlock Text="{Binding Matches}" Margin="0,0,20,0" Foreground="{StaticResource TextSecondaryBrush}" />
                                                         <TextBlock Text="{Binding Record}" Margin="0,0,20,0" FontWeight="Bold" />
                                                         <TextBlock Text="{Binding Net}" FontWeight="Bold" Foreground="{Binding NetColor, Converter={StaticResource HexToBrush}}" />
                                                     </StackPanel>
@@ -625,15 +721,15 @@
                         </Button>
 
                         <StackPanel Margin="0,0,48,0" Visibility="{Binding IsNotificationsOpen, Converter={StaticResource BoolToVisible}}">
-                            <TextBlock Text="Client Status" FontSize="21" FontWeight="Bold" />
-                            <TextBlock Text="VALORANT CLIENT AND BACKEND" FontSize="10" Foreground="{DynamicResource AccentBrush}" Margin="0,7,0,22" />
+                            <TextBlock Text="Game Status" FontSize="21" FontWeight="Bold" />
+                            <TextBlock Text="VALORANT CONNECTION AND BACKEND" FontSize="10" Foreground="{DynamicResource AccentBrush}" Margin="0,7,0,22" />
                             <Border Background="#08080A" BorderBrush="#25252B" BorderThickness="1" CornerRadius="12" Padding="16">
                                 <StackPanel>
-                                    <TextBlock Text="{Binding NoticeText}" TextWrapping="Wrap" Foreground="#B6B6BC" />
-                                    <TextBlock Text="Everything looks good. No new notifications." Foreground="#92929A"
+                                    <TextBlock Text="{Binding NoticeText}" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" />
+                                    <TextBlock Text="Everything looks good. No new notifications." Foreground="{StaticResource TextMutedBrush}"
                                                Visibility="{Binding HasNotice, Converter={StaticResource InvertBoolToCollapsed}}" />
-                                    <TextBlock Text="{Binding Backend.StatusText}" Margin="0,10,0,0" Foreground="#777780" />
-                                    <TextBlock Text="{Binding BackendVersion}" Margin="0,4,0,0" Foreground="#5F5F67" />
+                                    <TextBlock Text="{Binding Backend.StatusText}" Margin="0,10,0,0" Foreground="{StaticResource TextMutedBrush}" />
+                                    <TextBlock Text="{Binding BackendVersion}" Margin="0,4,0,0" Foreground="{StaticResource TextMutedBrush}" />
                                 </StackPanel>
                             </Border>
                             <Button Content="Check for updates" Style="{StaticResource SecondaryButton}" Command="{Binding CheckUpdatesCommand}" Margin="0,14,0,0" HorizontalAlignment="Left" />
@@ -643,8 +739,8 @@
                             <StackPanel Margin="0,0,14,0">
                                 <TextBlock Text="Settings" FontSize="21" FontWeight="Bold" />
                                 <TextBlock Text="APPEARANCE, APPLICATION AND ADVANCED" FontSize="10" Foreground="{DynamicResource AccentBrush}" Margin="0,7,0,20" />
-                                <TextBlock Text="Appearance" FontSize="12" FontWeight="SemiBold" Foreground="#D7D7DB" />
-                                <TextBlock Text="Accent color and dashboard background." FontSize="11" Foreground="#777780" Margin="0,3,0,10" />
+                                <TextBlock Text="Appearance" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                                <TextBlock Text="Accent color and dashboard background." FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,3,0,10" />
                                 <ItemsControl ItemsSource="{Binding AccentPresets}">
                                     <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
@@ -667,8 +763,8 @@
                                     <Button Content="Remove" Style="{StaticResource DangerButton}" Command="{Binding RemoveBackgroundCommand}" />
                                 </StackPanel>
                                 <Border Height="1" Background="#242429" Margin="0,18,0,0" />
-                                <TextBlock Text="Application" FontSize="12" FontWeight="SemiBold" Foreground="#D7D7DB" Margin="0,16,0,0" />
-                                <TextBlock Text="Startup, updates, logs, and exit." FontSize="11" Foreground="#777780" Margin="0,3,0,10" />
+                                <TextBlock Text="Application" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,16,0,0" />
+                                <TextBlock Text="Startup, updates, logs, and exit." FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,3,0,10" />
                                 <CheckBox x:Name="StartupCheck" Content="Start 1 Bullet with Windows"
                                           IsChecked="{Binding StartWithWindows, Mode=TwoWay}" Click="StartupCheck_Click" />
                                 <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
@@ -676,21 +772,38 @@
                                     <Button Content="Open logs" Style="{StaticResource UtilityButton}" Command="{Binding OpenLogsCommand}" Margin="0,0,8,0" />
                                     <Button Content="Quit 1 Bullet" Style="{StaticResource DangerButton}" Command="{Binding QuitCommand}" />
                                 </StackPanel>
+                                <TextBlock Text="{Binding UpdateStatusText}" FontSize="11" Foreground="{StaticResource TextMutedBrush}"
+                                           Margin="0,8,0,0" Visibility="{Binding HasUpdateStatus, Converter={StaticResource BoolToVisible}}" />
                                 <Border Height="1" Background="#242429" Margin="0,18,0,0" />
-                                <TextBlock Text="Advanced" FontSize="12" FontWeight="SemiBold" Foreground="#D7D7DB" Margin="0,16,0,0" />
-                                <TextBlock Text="Only needed when troubleshooting the local backend." FontSize="11" Foreground="#777780" Margin="0,3,0,10" />
-                                <TextBlock FontSize="11" Foreground="#777780" TextWrapping="Wrap">
+                                <TextBlock Text="Gameplay automation" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,16,0,0" />
+                                <TextBlock Text="Automatic agent locking during Agent Select." FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,3,0,10" />
+                                <Button Content="Configure instalock" Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding ShowPanelCommand}" CommandParameter="Instalock" HorizontalAlignment="Left" />
+                                <Border Height="1" Background="#242429" Margin="0,18,0,0" />
+                                <TextBlock Text="Advanced" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,16,0,0" />
+                                <TextBlock Text="Only needed when troubleshooting the local backend." FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,3,0,10" />
+                                <TextBlock FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap">
                                     <Run Text="App " /><Run Text="{Binding VersionText, Mode=OneWay}" /><Run Text="  ·  " /><Run Text="{Binding BackendVersion, Mode=OneWay}" /><Run Text="  ·  " /><Run Text="{Binding RequestText, Mode=OneWay}" />
                                 </TextBlock>
-                                <TextBlock Text="{Binding Backend.StatusText}" FontSize="11" Foreground="#5F5F67" Margin="0,4,0,10" TextWrapping="Wrap" />
-                                <Expander Header="Backend diagnostics" Foreground="#777780" FontSize="11"
+                                <TextBlock Text="{Binding Backend.StatusText}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,4,0,10" TextWrapping="Wrap" />
+                                <Expander Header="Backend diagnostics" Foreground="{StaticResource TextMutedBrush}" FontSize="11"
                                           Visibility="{Binding Backend.LogTail, Converter={StaticResource StringEmptyToCollapsed}}">
                                     <StackPanel Margin="0,8,0,0">
                                         <TextBlock Text="{Binding Backend.LogTail}" FontFamily="Consolas" FontSize="10"
-                                                   Foreground="#888890" TextWrapping="Wrap" />
+                                                   Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
                                         <Button Content="Retry connection" Style="{StaticResource SecondaryButton}" Command="{Binding RetryBackendCommand}" Margin="0,8,0,0" HorizontalAlignment="Left" />
                                     </StackPanel>
                                 </Expander>
+                                <Border Height="1" Background="#242429" Margin="0,18,0,0" />
+                                <TextBlock Text="About" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,16,0,0" />
+                                <TextBlock FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,3,0,0" TextWrapping="Wrap">
+                                    <Run Text="1 Bullet " /><Run Text="{Binding VersionText, Mode=OneWay}" /><Run Text=" · Made by Saif" />
+                                </TextBlock>
+                                <TextBlock Text="Live VALORANT companion · UI assistance: OpenAI ChatGPT / Codex · Licensed under GPL-3.0"
+                                           FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,4,0,10" TextWrapping="Wrap" />
+                                <Button Content="Open repository" Style="{StaticResource UtilityButton}"
+                                        Command="{Binding OpenLinkCommand}" CommandParameter="https://github.com/yksaionara/1bullet"
+                                        HorizontalAlignment="Left" />
                             </StackPanel>
                         </ScrollViewer>
 
@@ -698,42 +811,94 @@
                             <TextBlock Text="Riot Presence" FontSize="21" FontWeight="Bold" />
                             <TextBlock Text="APPEAR OFFLINE, AWAY, OR ONLINE" FontSize="10" Foreground="{DynamicResource AccentBrush}" Margin="0,7,0,20" />
                             <TextBlock Text="Choose how you appear to friends. Starting offline mode can launch the Riot client through the local presence relay."
-                                       TextWrapping="Wrap" Foreground="#8B8B93" />
+                                       TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" />
                             <UniformGrid Columns="2" Margin="0,18,0,0">
                                 <Button Content="Offline" Command="{Binding SetOfflineStatusCommand}" CommandParameter="offline" Margin="0,0,5,8" />
                                 <Button Content="Away" Style="{StaticResource SecondaryButton}" Command="{Binding SetOfflineStatusCommand}" CommandParameter="away" Margin="5,0,0,8" />
                                 <Button Content="Mobile" Style="{StaticResource SecondaryButton}" Command="{Binding SetOfflineStatusCommand}" CommandParameter="mobile" Margin="0,0,5,0" />
                                 <Button Content="Back online" Style="{StaticResource SecondaryButton}" Command="{Binding SetOfflineStatusCommand}" CommandParameter="online" Margin="5,0,0,0" />
                             </UniformGrid>
-                            <TextBlock Text="{Binding ControlMessage}" Foreground="#A0A0A7" TextWrapping="Wrap" Margin="0,14,0,0" />
+                            <TextBlock Text="{Binding ControlMessage}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,14,0,0" />
                         </StackPanel>
 
                         <StackPanel Margin="0,0,48,0" Visibility="{Binding IsInstalockOpen, Converter={StaticResource BoolToVisible}}">
-                            <TextBlock Text="Instalock" FontSize="21" FontWeight="Bold" />
-                            <TextBlock Text="AGENT SELECT AUTOMATION" FontSize="10" Foreground="{DynamicResource AccentBrush}" Margin="0,7,0,20" />
-                            <TextBlock Text="Agent" FontSize="10" Foreground="#777780" />
-                            <ComboBox ItemsSource="{Binding Agents}" SelectedItem="{Binding SelectedAgent}" Margin="0,7,0,14" />
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
-                                <StackPanel Margin="0,0,6,0">
-                                    <TextBlock Text="Action" FontSize="10" Foreground="#777780" />
-                                    <ComboBox SelectedValue="{Binding InstalockMode}" SelectedValuePath="Tag" Margin="0,7,0,0">
-                                        <ComboBoxItem Content="Lock agent" Tag="lock" />
-                                        <ComboBoxItem Content="Select only" Tag="select" />
-                                    </ComboBox>
+                            <DockPanel Margin="0,0,0,12">
+                                <Button DockPanel.Dock="Right" Style="{StaticResource ChromeButton}" Width="34" Height="34" Padding="0"
+                                        Command="{Binding ClosePanelCommand}" ToolTip="Close instalock">
+                                    <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" />
+                                </Button>
+                                <TextBlock Text="Instalock" FontSize="21" FontWeight="Bold" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <Border Background="#0A0A0D" BorderBrush="#242429" BorderThickness="1" CornerRadius="14" Padding="16">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,14">
+                                        <TextBlock Text="Instalock" FontSize="19" FontWeight="Bold" VerticalAlignment="Center" />
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <TextBlock Text="REGION" FontSize="9" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                            <Border Background="#111116" BorderBrush="#303038" BorderThickness="1" CornerRadius="6" Padding="11,6">
+                                                <TextBlock Text="AUTO" FontSize="10" FontWeight="Bold" />
+                                            </Border>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
+                                        <Button Content="CHECK SIDE" Style="{StaticResource SecondaryButton}" Margin="0,0,5,0" Command="{Binding CheckSideCommand}" />
+                                        <Button Grid.Column="1" Content="DODGE" Style="{StaticResource SecondaryButton}" Margin="5,0,0,0" Command="{Binding DodgeCommand}" />
+                                    </Grid>
+                                    <TextBlock Text="SELECT AGENT" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8" />
+                                    <ScrollViewer Height="292" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                        <ItemsControl ItemsSource="{Binding Agents}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button Style="{StaticResource AgentTileButton}"
+                                                            Command="{Binding DataContext.SelectInstalockAgentCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}">
+                                                        <StackPanel>
+                                                            <Grid Width="68" Height="68">
+                                                                <Border Background="#1A1A20" CornerRadius="5" />
+                                                                <Image Source="{Binding Portrait}" Stretch="UniformToFill">
+                                                                    <Image.Clip><RectangleGeometry Rect="0,0,68,68" RadiusX="5" RadiusY="5" /></Image.Clip>
+                                                                </Image>
+                                                            </Grid>
+                                                            <TextBlock Text="{Binding Name}" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center"
+                                                                       Margin="0,5,0,0" TextTrimming="CharacterEllipsis" />
+                                                            <TextBlock Text="{Binding Role}" FontSize="8" Foreground="{StaticResource TextMutedBrush}"
+                                                                       HorizontalAlignment="Center" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                    <Border BorderBrush="#2A2A30" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,4,0,12">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                            <StackPanel Margin="0,0,7,0">
+                                                <TextBlock Text="DELAY (SECONDS)" FontSize="9" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,5" />
+                                                <TextBox Text="{Binding InstalockDelay}" Margin="0" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Margin="7,0,0,0">
+                                                <TextBlock Text="MODE" FontSize="9" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,5" />
+                                                <UniformGrid Columns="2">
+                                                    <Button Content="LOCK" Command="{Binding SetInstalockModeCommand}" CommandParameter="lock">
+                                                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource SecondaryButton}"><Style.Triggers><DataTrigger Binding="{Binding InstalockMode}" Value="lock"><Setter Property="Background" Value="{DynamicResource AccentBrush}" /><Setter Property="Foreground" Value="White" /></DataTrigger></Style.Triggers></Style></Button.Style>
+                                                    </Button>
+                                                    <Button Content="HOVER" Command="{Binding SetInstalockModeCommand}" CommandParameter="select">
+                                                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource SecondaryButton}"><Style.Triggers><DataTrigger Binding="{Binding InstalockMode}" Value="select"><Setter Property="Background" Value="{DynamicResource AccentBrush}" /><Setter Property="Foreground" Value="White" /></DataTrigger></Style.Triggers></Style></Button.Style>
+                                                    </Button>
+                                                </UniformGrid>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="{Binding InstalockStatus}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,10" />
+                                    <Button Content="{Binding InstalockPrimaryText}" Command="{Binding ToggleInstalockCommand}" Padding="14,11" />
+                                    <TextBlock Text="Auto-locking automates the client and may violate Riot's Terms of Service."
+                                               Foreground="{StaticResource TextMutedBrush}" FontSize="10" Margin="0,12,0,0" TextWrapping="Wrap" />
                                 </StackPanel>
-                                <StackPanel Grid.Column="1" Margin="6,0,0,0">
-                                    <TextBlock Text="Delay (seconds)" FontSize="10" Foreground="#777780" />
-                                    <TextBox Text="{Binding InstalockDelay}" Margin="0,7,0,0" />
-                                </StackPanel>
-                            </Grid>
-                            <TextBlock Text="{Binding InstalockStatus}" Foreground="#A0A0A7" TextWrapping="Wrap" Margin="0,14,0,14" />
-                            <StackPanel Orientation="Horizontal">
-                                <Button Content="Arm instalock" Command="{Binding StartInstalockCommand}" Margin="0,0,8,0" />
-                                <Button Content="Stop" Style="{StaticResource SecondaryButton}" Command="{Binding StopInstalockCommand}" />
-                            </StackPanel>
-                            <TextBlock Text="Client automation may violate Riot's terms. Use at your own risk."
-                                       Foreground="#686870" FontSize="10" Margin="0,16,0,0" />
+                            </Border>
                         </StackPanel>
                     </Grid>
                 </Border>

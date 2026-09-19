@@ -9,7 +9,15 @@
         <SolidColorBrush x:Key="CardBrush" Color="#0B0B0E" />
         <SolidColorBrush x:Key="LineBrush" Color="#242429" />
         <SolidColorBrush x:Key="TextBrush" Color="#F0F0F2" />
-        <SolidColorBrush x:Key="DimBrush" Color="#85858D" />
+        <SolidColorBrush x:Key="DimBrush" Color="#A3A3AB" />
+
+        <!-- Consistent text hierarchy: nothing below is near-black on dark surfaces. -->
+        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#EDEDEF" />
+        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#B4B4BC" />
+        <SolidColorBrush x:Key="TextMutedBrush" Color="#8C8C94" />
+        <SolidColorBrush x:Key="TextDisabledBrush" Color="#6E6E76" />
+        <SolidColorBrush x:Key="TextSuccessBrush" Color="#36D399" />
+        <SolidColorBrush x:Key="TextDangerBrush" Color="#FF6B7A" />
 
         <local:NullToCollapsedConverter x:Key="NullToCollapsed" />
         <local:StringEmptyToCollapsedConverter x:Key="StringEmptyToCollapsed" />
@@ -44,10 +52,13 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Opacity" Value="0.82" />
+                                <Setter Property="Opacity" Value="0.85" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Opacity" Value="0.7" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.38" />
+                                <Setter Property="Opacity" Value="0.55" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -95,12 +106,16 @@
             <Setter Property="Padding" Value="12,9" />
             <Setter Property="FontSize" Value="11" />
             <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1A1A20" />
+                    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                </Trigger>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
                     <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
                     <Setter Property="Foreground" Value="White" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsEligible}" Value="False">
-                    <Setter Property="Opacity" Value="0.35" />
+                    <Setter Property="Opacity" Value="0.55" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -111,6 +126,21 @@
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="Padding" Value="12,8" />
             <Setter Property="FontSize" Value="10" />
+        </Style>
+
+        <Style x:Key="AgentTileButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#101014" />
+            <Setter Property="BorderBrush" Value="#2A2A30" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="Padding" Value="5" />
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="MinWidth" Value="82" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter Property="Background" Value="#2A1519" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <Style TargetType="TextBox">
