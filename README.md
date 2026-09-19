@@ -4,7 +4,7 @@
 [![Latest release](https://img.shields.io/github/v/release/yksaionara/1bullet)](https://github.com/yksaionara/1bullet/releases/latest)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 
-Made by Saif.
+Made by Saif · developed with assistance from OpenAI ChatGPT and Codex.
 
 1 Bullet is a native Windows VALORANT companion. It reads Riot's local client interfaces on your PC to show live lobby and match information such as ranks, RR, parties, encounters, agents, player cards, and equipped weapon skins when that data is available.
 
@@ -109,8 +109,10 @@ If VALORANT data does not appear:
 
 If a portable build says the backend is missing, make sure both `1bullet.exe` and `1bullet-backend.exe` were extracted into the same folder.
 
-## License and attribution
+## License and credits
 
-1 Bullet is a modified version of [Valorant Scout](https://github.com/kryotrades/Valorant-Scout) by kryotrades and is distributed under the GNU General Public License v3.0. See `LICENSE` and `NOTICE`.
+1 Bullet is distributed under the GNU General Public License v3.0. Required upstream licensing and provenance notices are retained in `NOTICE`.
+
+Development assistance: OpenAI ChatGPT and Codex.
 
 1 Bullet is not affiliated with, endorsed by, or sponsored by Riot Games. Features that automate client actions may be subject to Riot's terms and policies.
